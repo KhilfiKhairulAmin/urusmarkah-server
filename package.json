@@ -1,7 +1,7 @@
 {
   "name": "urusmarkah",
   "version": "1.0.0",
-  "description": "",
+  "description": "Sistem pengurusan markah yang progresif dan sistematik untuk pengurusan pertandingan berbagai.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -16,5 +16,13 @@
   "dependencies": {
     "express": "^4.17.3",
     "socket.io": "^4.4.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iNFiENiTE-World/urusmarkah-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iNFiENiTE-World/urusmarkah-server/issues"
+  },
+  "homepage": "https://github.com/iNFiENiTE-World/urusmarkah-server#readme"
 }
