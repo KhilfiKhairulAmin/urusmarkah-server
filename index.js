@@ -1,3 +1,4 @@
+const { readFileSync } = require('fs');
 const express = require("express");
 const app = express();
 
@@ -7,6 +8,7 @@ app.listen(3000, () => {
 
 app.get('/', (req, res) => {
     res.writeHead(200, {"Content-Type":"text/html"});
-    res.write("Hello, User!");
+    const main = readFileSync("../client/index.html");
+    res.write(main);
     res.end();
 })
