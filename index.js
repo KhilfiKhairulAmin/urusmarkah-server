@@ -12,3 +12,11 @@ app.get('/', (req, res) => {
     res.write(main);
     res.end();
 })
+
+app.get('/index.js', (req, res) => {
+    res.writeHead(200, {"Content-Type":"text/html"});
+    const main = readFileSync("../client/index.js");
+    res.write(main);
+    res.end();
+})
+
