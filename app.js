@@ -1,6 +1,7 @@
 const { readFileSync } = require('fs');
 const express = require("express");
 const app = express();
+const indexRoute = require('./routes/index');
 
 const routeLog = (req, res, next) => {
     console.log(`URL: ${req.url}\nBody: ${req.body}\nParams: ${req.params}`)
@@ -12,6 +13,7 @@ app.listen(3000, () => {
     console.log("Listened")
 })
 
+/*
 // Menghantar laman utama kepada pengguna
 app.get('/', (req, res) => {
     res.writeHead(200, {"Content-Type":"text/html"});
@@ -19,6 +21,8 @@ app.get('/', (req, res) => {
     res.write(main);
     res.end();
 })
+*/
+app.use('/', indexRoute);
 
 /* Menghantar semua jenis fail JS yang dipesan oleh pengguna
 • fail JS yang dihantar adalah sebahagian daripada skrip HTML

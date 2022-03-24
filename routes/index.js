@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { readFileSync } = require('fs');
 
 router.get('/', (req, res) => {
     res.writeHead(200, {"Content-Type":"text/html"});
@@ -7,3 +8,5 @@ router.get('/', (req, res) => {
     res.write(main);
     res.end();
 })
+
+module.exports = router;
