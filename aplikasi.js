@@ -8,8 +8,8 @@ aplikasi.listen(port, () => {
 });
 
 // Penetapan router yang digunakan
-const indexRoute = require('./routers/index');
+const indexRoute = require('./routes/index');
 aplikasi.use('/', indexRoute);
 
-const penggunaRoute = require('./routers/pengguna');
+const penggunaRoute = require('./routes/pengguna');
 aplikasi.use('/pengguna', penggunaRoute);
