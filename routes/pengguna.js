@@ -69,11 +69,12 @@ router.post("/log_masuk", async (req, res) => {
     }
 });
 
-router.get("/utama", (req, res) => {
-    const koleksi = pangkalan_data.db("urusmarkah").collection("pengguna");
-    const maklumat = koleksi.findOne(req.query.emel);
-    res.json({ emel: maklumat.emel, nama: maklumat.nama });
-    res.end();
+router.get("/utama", async (req, res) => {
+    const koleksi = pangkalan_data.db().collection("pengguna");
+    const maklumat = { emel: req.query.emel };
+    const carian = await koleksi.findOne(maklumat);
+    console.log(carian)
+    res.status(200).send(carian);
 });
 
 module.exports = router;
