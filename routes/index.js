@@ -12,7 +12,7 @@ router.use(routeLog);
 // Menghantar laman utama kepada pengguna
 router.get('/', (req, res) => {
     res.writeHead(200, {"Content-Type":"text/html"});
-    const utama = readFileSync("../client/index.html");
+    const utama = readFileSync("../client/pages/index.html");
     res.write(utama);
     res.end();
 });
@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
 */
 router.get('/*.js', (req, res) => {
     res.writeHead(200, {"Content-Type":"text/html"});
-    const main = readFileSync(`../client${req.url}`);
+    const main = readFileSync(`../client/scripts/${req.url}`);
     res.write(main);
     res.end();
 });
