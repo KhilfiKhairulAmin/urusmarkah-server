@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { MongoClient } = require("mongodb");
 const { readFileSync } = require('fs');
-const e = require('express');
 
 
-// Dapatkan halaman borang
+// Dapatkan halaman
 router.get("/", (req, res) => {
     if (req.query.emel) {
         res.writeHead(200, {"Content-Type":"text/html"});
@@ -39,7 +38,7 @@ const hubungPangkalanData = async (req, res, next) => {
     try {
         await pangkalan_data.connect();
         console.log("Hubungan berjaya!");
-        await next().then(pangkalan_data.close())
+        await next()
     }
     catch (err) {
         console.log(err.stack)
@@ -52,18 +51,21 @@ router.use(hubungPangkalanData);
 
 // Cipta akaun pengguna baharu
 router.post("/", async (req, res) => {
-    const koleksi = pangkalan_data.db("urusmarkah").collection("pengguna");
+    const koleksi = pangkalan_data.db().collection("pengguna");
     const maklumatAkaunBaharu = { emel: req.body.emel, nama: req.body.nama }
     await koleksi.insertOne(maklumatAkaunBaharu);
     res.redirect(301, "http://localhost:3000");
 });
 
-router.post("/log_masuk", (req, res) => {
-    const koleksi = pangkalan_data.db("urusmarkah").collection("pengguna");
+router.post("/log_masuk", async (req, res) => {
+    const koleksi = pangkalan_data.db().collection("pengguna");
     const maklumatAkaun = { emel: req.body.emel };
-    const carian = koleksi.findOne(maklumatAkaun);
-    if (carian) {
-        res.redirect(301, `http://localhost:3000/pengguna?emel=${maklumatAkaun.emel}`)
+    const carian = await koleksi.findOne(maklumatAkaun);
+    if (carian.emel != undefined) {
+        res.redirect(301, `http://localhost:3000/pengguna?emel=${carian.emel}`)
+    }
+    else {
+        res.redirect(301, `http://localhost:3000/`)
     }
 });
 

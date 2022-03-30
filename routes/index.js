@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
 */
 router.get('/*.js', (req, res) => {
     res.writeHead(200, {"Content-Type":"text/html"});
-    const main = readFileSync(`../client/scripts/${req.url}`);
+    const main = readFileSync(`../client/${req.url}`);
     res.write(main);
     res.end();
 });
