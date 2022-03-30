@@ -2,15 +2,25 @@ const express = require('express');
 const router = express.Router();
 const { MongoClient } = require("mongodb");
 const { readFileSync } = require('fs');
+const e = require('express');
 
 
 // Dapatkan halaman borang
 router.get("/", (req, res) => {
-    res.writeHead(200, {"Content-Type":"text/html"});
-    const borang = readFileSync("../client/pages/borang.html");
-    res.write(borang);
-    res.end();
+    if (req.query.emel) {
+        res.writeHead(200, {"Content-Type":"text/html"});
+        const utama = readFileSync("../client/pages/utama.html");
+        res.write(utama);
+        res.end();
+    }
+    else {
+        res.writeHead(200, {"Content-Type":"text/html"});
+        const borang = readFileSync("../client/pages/borang.html");
+        res.write(borang);
+        res.end();
+    }
 });
+
 
 router.get("/log_masuk", (req, res) => {
     res.writeHead(200, {"Content-Type":"text/html"});
@@ -53,8 +63,15 @@ router.post("/log_masuk", (req, res) => {
     const maklumatAkaun = { emel: req.body.emel };
     const carian = koleksi.findOne(maklumatAkaun);
     if (carian) {
-        res.redirect(301, "http://localhost:3000/pengguna/pertandingan")
+        res.redirect(301, `http://localhost:3000/pengguna?emel=${maklumatAkaun.emel}`)
     }
-})
+});
+
+router.get("/utama", (req, res) => {
+    const koleksi = pangkalan_data.db("urusmarkah").collection("pengguna");
+    const maklumat = koleksi.findOne(req.query.emel);
+    res.json({ emel: maklumat.emel, nama: maklumat.nama });
+    res.end();
+});
 
 module.exports = router;

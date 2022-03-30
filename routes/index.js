@@ -3,7 +3,7 @@ const router = express.Router();
 const { readFileSync } = require('fs');
 
 const routeLog = (req, res, next) => {
-    console.log(`URL: ${req.url}\nBody: ${req.body}\nParams: ${req.params}`)
+    console.log(`URL: ${req.url}\nBody: ${req.body}\nParams: ${Object.keys(req.query)}`)
     next();
 };
 
