@@ -4,13 +4,14 @@
   "description": "Sistem pengurusan markah yang progresif dan sistematik untuk pengurusan pertandingan berbagai.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "devStart": "nodemon aplikasi.js"
+    "test": "jest --watchAll --verbose",
+    "devStart": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "nodemon": "^2.0.15"
   },
