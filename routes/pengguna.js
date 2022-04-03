@@ -8,7 +8,7 @@ const { readFileSync } = require('fs')
 const url = `mongodb+srv://iNFiENiTE:${require('../‎')}@infienite-cluster.4j1az.mongodb.net/urusmarkah?retryWrites=true&w=majority`
 const pangkalan_data = new MongoClient(url)
 
-// Mewuujudkan hubungan dengan pangkalan data cloud (MongoDB)
+// Mewujudkan hubungan dengan pangkalan data cloud (MongoDB)
 const hubungPangkalanData = async (req, res, next) => {
     try {
         await pangkalan_data.connect();
