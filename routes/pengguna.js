@@ -8,7 +8,7 @@ const { readFileSync } = require('fs')
 const url = `mongodb+srv://iNFiENiTE:${require('../‎')}@infienite-cluster.4j1az.mongodb.net/urusmarkah?retryWrites=true&w=majority`
 const pangkalan_data = new MongoClient(url)
 
-// Mewuujudkan hubungan dengan pangkalan data cloud (MongoDB)
+// Mewujudkan hubungan dengan pangkalan data cloud (MongoDB)
 const hubungPangkalanData = async (req, res, next) => {
     try {
         await pangkalan_data.connect();
@@ -54,7 +54,7 @@ router.route('/')
 })
 
 // Pengendalian route 'log_masuk'
-router.route('log_masuk')
+router.route('/log_masuk')
 .get((req, res) => { // Mengembalikan halaman html log masuk
     res.writeHead(200, {"Content-Type":"text/html"})
     const borang = readFileSync("../client/pages/log_masuk.html")
