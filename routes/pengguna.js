@@ -54,7 +54,7 @@ router.route('/')
 })
 
 // Pengendalian route 'log_masuk'
-router.route('log_masuk')
+router.route('/log_masuk')
 .get((req, res) => { // Mengembalikan halaman html log masuk
     res.writeHead(200, {"Content-Type":"text/html"})
     const borang = readFileSync("../client/pages/log_masuk.html")
