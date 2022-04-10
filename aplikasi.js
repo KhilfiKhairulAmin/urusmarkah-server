@@ -8,4 +8,4 @@ aplikasi.use('/', indexRoute);
 const penggunaRoute = require('./routes/pengguna');
 aplikasi.use('/pengguna', penggunaRoute);
 
-module.exports = aplikasi
+module.exports = aplikasi;
