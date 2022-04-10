@@ -2,10 +2,10 @@ const express = require("express");
 const aplikasi = express();
 
 // Penetapan router yang digunakan
-const indexRoute = require('./routes/index');
+const indexRoute = require('./api/v1/index');
 aplikasi.use('/', indexRoute);
 
-const penggunaRoute = require('./routes/pengguna');
+const penggunaRoute = require('./api/v1/pengguna');
 aplikasi.use('/pengguna', penggunaRoute);
 
 module.exports = aplikasi;
