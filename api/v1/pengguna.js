@@ -32,20 +32,26 @@ const hubunganPangkalanData = async (req, res, next) => {
 router.use(hubunganPangkalanData, express.json())
 
 
-/*  GET 
+/*  GET semua pelanggan
 
 */
 router.get('/semua_pengguna', async (req, res) => {
     let tapisan;
-    if (!req.query.nama) tapisan = {};
-    else tapisan = { nama: req.query.nama };
-    const koleksi = pangkalan_data.db('urusmarkah').collection('pengguna').find(tapisan);
-    const baca = await koleksi.toArray();
-    res.status(200).send(baca);
+    if (!req.query.nama) tapisan = {}; // Tiada tapisan nama, akan mengembalikan semua dokumen
+    else tapisan = { nama: req.query.nama }; // Mempunyai tapisan nama, akan mengembalikan dokumen yang mempunyai ciri nama sama (===) dengan ciri nama dalam tapisan
+    const koleksi = pangkalan_data.db('urusmarkah').collection('pengguna').find(tapisan); // Cari semua dokumen yang mempunyai ciri tapisan yang sama
+    const dokumen = await koleksi.toArray();
+    res.status(200).send(dokumen);
 });
 
-router.get('/pengguna', async (req, res) => {
+/*  GET pelanggan
 
+*/
+router.get('/pengguna', async (req, res) => {
+    if (!req.query.nama) return res.status(400).end(); // Kembalikan 400 kerana URL tidak menetapkan query nama
+    const tapisan = { nama: req.query.nama }; // Tetapkan ciri nama dalam tapisan kepada nilai nama dalam pesanan
+    const koleksi = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne(tapisan); // Cari 1 dokumen mempunyai nilai nama yang sama (===)
+    res.status(200).send(koleksi); 
 })
 
 // Pengendalian route '/'
