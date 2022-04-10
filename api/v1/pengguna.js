@@ -35,7 +35,7 @@ router.use(hubunganPangkalanData, express.json())
 /*  GET semua pelanggan
 
 */
-router.get('/semua_pengguna', async (req, res) => {
+router.get('/semua', async (req, res) => {
     let tapisan;
     if (!req.query.nama) tapisan = {}; // Tiada tapisan nama, akan mengembalikan semua dokumen
     else tapisan = { nama: req.query.nama }; // Mempunyai tapisan nama, akan mengembalikan dokumen yang mempunyai ciri nama sama (===) dengan ciri nama dalam tapisan
@@ -54,23 +54,27 @@ router.get('/pengguna', async (req, res) => {
     res.status(200).send(koleksi); 
 })
 
-// Pengendalian route '/'
-router.route('/')
-.post(async (req, res) => { // Mengendalikan kemasukan data pengguna baharu
+/*  DELETE pelanggan
+
+*/
+router.delete('/padam', async (req, res) => {
+    if (!req.query.nama) return res.status(400).end(); // Kembalikan 400 kerana URL tidak menetapkan query nama
+    const tapisan = { nama: req.query.nama }; // Tetapkan ciri nama dalam tapisan kepada nilai nama dalam pesanan
+    await pangkalan_data.db('urusmarkah').collection('pengguna').findOneAndDelete(tapisan); // Cari 1 dokumen mempunyai nilai nama yang sama (===) dan padamkan
+    res.status(200).end();
+})
+.post('/', async (req, res) => { // Mengendalikan kemasukan data pengguna baharu
     const koleksi = pangkalan_data.db().collection("pengguna")
     const maklumatAkaunBaharu = { emel: req.body.emel, nama: req.body.nama }
     await koleksi.insertOne(maklumatAkaunBaharu)
     res.redirect(301, "http://localhost:3000")
 })
 
+router.post('/')
+
+
 // Pengendalian route 'log_masuk'
 router.route('/log_masuk')
-.get((req, res) => { // Mengembalikan halaman html log masuk
-    res.writeHead(200, {"Content-Type":"text/html"})
-    const borang = readFileSync("../client/pages/log_masuk.html")
-    res.write(borang)
-    res.end()
-})
 .post(async (req, res) => { // Mengendalikan permintaan log masuk ke dalam sistem
     const koleksi = pangkalan_data.db().collection("pengguna")
     const maklumatAkaun = { emel: req.body.emel }
