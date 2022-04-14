@@ -36,10 +36,7 @@ router.use(hubunganPangkalanData, express.json())
 
 */
 router.get('/semua', async (req, res) => {
-    let tapisan;
-    if (!req.query.nama) tapisan = {}; // Tiada tapisan nama, akan mengembalikan semua dokumen
-    else tapisan = { nama: req.query.nama }; // Mempunyai tapisan nama, akan mengembalikan dokumen yang mempunyai ciri nama sama (===) dengan ciri nama dalam tapisan
-    const koleksi = pangkalan_data.db('urusmarkah').collection('pengguna').find(tapisan); // Cari semua dokumen yang mempunyai ciri tapisan yang sama
+    const koleksi = pangkalan_data.db('urusmarkah').collection('pengguna').find(); // Cari semua dokumen
     const dokumen = await koleksi.toArray();
     res.status(200).send(dokumen);
 });
@@ -47,48 +44,42 @@ router.get('/semua', async (req, res) => {
 /*  GET pelanggan
 
 */
-router.get('/pengguna', async (req, res) => {
-    if (!req.query.nama) return res.status(400).end(); // Kembalikan 400 kerana URL tidak menetapkan query nama
-    const tapisan = { nama: req.query.nama }; // Tetapkan ciri nama dalam tapisan kepada nilai nama dalam pesanan
-    const koleksi = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne(tapisan); // Cari 1 dokumen mempunyai nilai nama yang sama (===)
-    res.status(200).send(koleksi); 
+router.get('/satu/:nama', async (req, res) => {
+    const { nama } = req.params;
+    if (!nama) {
+        return res.status(400).send({ mesej: 'Perlukan nama'}); // Kembalikan mesej ralat
+    }
+    const carian = { nama: nama };
+    const dokumen = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne(carian); // Cari 1 dokumen mempunyai nilai `nama` yang sama (===)
+    res.status(200).send(dokumen); 
 })
 
-/*  DELETE pelanggan
+/*  PUT (kemas kini) pelanggan
 
 */
-router.delete('/padam', async (req, res) => {
-    if (!req.query.nama) return res.status(400).end(); // Kembalikan 400 kerana URL tidak menetapkan query nama
-    const tapisan = { nama: req.query.nama }; // Tetapkan ciri nama dalam tapisan kepada nilai nama dalam pesanan
-    await pangkalan_data.db('urusmarkah').collection('pengguna').findOneAndDelete(tapisan); // Cari 1 dokumen mempunyai nilai nama yang sama (===) dan padamkan
+router.put('/kemas_kini/:nama', async (req, res) => {
+    const { nama } = req.params;
+    const tapisan = { nama: nama }; // Tetapkan ciri nama dalam tapisan kepada nilai nama dalam pesanan
+    const kemas_kini = { $set : req.body};
+    await pangkalan_data.db('urusmarkah').collection('pengguna').findOneAndUpdate(tapisan, kemas_kini)
+    res.end()
+})
+
+router.post('/baharu', async (req, res) => {
+    const { emel, nama, kata_laluan } = req.body;
+    if (!emel || !nama || !kata_laluan) return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda'});
+    const pengguna = { emel: emel, nama: nama, kata_laluan: kata_laluan};
+    await pangkalan_data.db('urusmarkah').collection('pengguna').insertOne(pengguna);
     res.status(200).end();
 })
-.post('/', async (req, res) => { // Mengendalikan kemasukan data pengguna baharu
-    const koleksi = pangkalan_data.db().collection("pengguna")
-    const maklumatAkaunBaharu = { emel: req.body.emel, nama: req.body.nama }
-    await koleksi.insertOne(maklumatAkaunBaharu)
-    res.redirect(301, "http://localhost:3000")
+
+router.post('/login', async (req, res) => {
+    const { emel, kata_laluan } = req.body;
+    if (!emel || !kata_laluan ) return res.send({mesej: 'Sila lengkapkan butiran anda'});
+    const pengguna = { emel: emel };
+    const dokumen = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne(pengguna);
+    if (kata_laluan !== dokumen.kata_laluan ) return res.status(400).send({ mesej: 'Katalaluan salah'});
+    return res.status(200).send({mesej: 'Login berjaya!'});
 })
-
-router.post('/')
-
-
-// Pengendalian route 'log_masuk'
-router.route('/log_masuk')
-.post(async (req, res) => { // Mengendalikan permintaan log masuk ke dalam sistem
-    const koleksi = pangkalan_data.db().collection("pengguna")
-    const maklumatAkaun = { emel: req.body.emel }
-    const carian = await koleksi.findOne(maklumatAkaun)
-    res.redirect(301, `http://localhost:3000/pengguna?emel=${carian.emel}`)
-})
-
-router.route('/utama')
-.get(async (req, res) => { // Mengembalikan data berkaitan pengguna
-    const koleksi = pangkalan_data.db().collection("pengguna")
-    const maklumat = { emel: req.query.emel }
-    const carian = await koleksi.findOne(maklumat)
-    console.log(carian)
-    res.status(200).send(carian)
-});
 
 module.exports = router // Mengeksport router untuk digunakan oleh aplikasi
