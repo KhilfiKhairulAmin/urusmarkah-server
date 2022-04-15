@@ -46,12 +46,11 @@ router.get('/semua', async (req, res) => {
 */
 router.get('/satu/:nama', async (req, res) => {
     const { nama } = req.params;
-    if (!nama) {
-        return res.status(400).send({ mesej: 'Perlukan nama'}); // Kembalikan mesej ralat
-    }
+    if (!nama) return res.status(400).send({ mesej: 'Perlukan nama'}); // Kembalikan mesej ralat
     const carian = { nama: nama };
     const dokumen = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne(carian); // Cari 1 dokumen mempunyai nilai `nama` yang sama (===)
-    res.status(200).send(dokumen); 
+    if (!dokumen) return res.status(400).send({ mesej: 'Pengguna tidak wujud'});
+    res.status(200).send(dokumen);
 })
 
 /*  PUT (kemas kini) pelanggan
@@ -71,13 +70,13 @@ router.post('/baharu', async (req, res) => {
     const pengguna = { emel: emel, nama: nama, kata_laluan: kata_laluan};
 
     const emel_wujud = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne({ emel: emel });
-    if (emel_wujud) return res.status(400).send({mesej: 'Emel sudah diambil'});
+    if (emel_wujud) return res.status(400).send({ mesej: 'Emel sudah diambil' });
 
     const nama_wujud = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne({ nama: nama });
-    if (nama_wujud) return res.status(400).send({mesej: 'Nama sudah diambil'})
+    if (nama_wujud) return res.status(400).send({ mesej: 'Nama sudah diambil' })
 
     await pangkalan_data.db('urusmarkah').collection('pengguna').insertOne(pengguna);
-    res.status(200).end();
+    res.status(200).send({ mesej: 'Pengguna baharu berjaya dicipta' });
 })
 
 router.post('/login', async (req, res) => {
