@@ -69,13 +69,20 @@ router.post('/baharu', async (req, res) => {
     const { emel, nama, kata_laluan } = req.body;
     if (!emel || !nama || !kata_laluan) return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda'});
     const pengguna = { emel: emel, nama: nama, kata_laluan: kata_laluan};
+
+    const emel_wujud = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne({ emel: emel });
+    if (emel_wujud) return res.status(400).send({mesej: 'Emel sudah diambil'});
+
+    const nama_wujud = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne({ nama: nama });
+    if (nama_wujud) return res.status(400).send({mesej: 'Nama sudah diambil'})
+
     await pangkalan_data.db('urusmarkah').collection('pengguna').insertOne(pengguna);
     res.status(200).end();
 })
 
 router.post('/login', async (req, res) => {
     const { emel, kata_laluan } = req.body;
-    if (!emel || !kata_laluan ) return res.send({mesej: 'Sila lengkapkan butiran anda'});
+    if (!emel || !kata_laluan ) return res.status(400).send({mesej: 'Sila lengkapkan butiran anda'});
     const pengguna = { emel: emel };
     const dokumen = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne(pengguna);
     if (kata_laluan !== dokumen.kata_laluan ) return res.status(400).send({ mesej: 'Katalaluan salah'});
