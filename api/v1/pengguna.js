@@ -72,8 +72,8 @@ router.post('/baharu', async (req, res) => {
     const emel_wujud = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne({ emel: emel });
     if (emel_wujud) return res.status(400).send({ mesej: 'Emel sudah diambil' });
 
-    const nama_wujud = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne({ nama: nama });
-    if (nama_wujud) return res.status(400).send({ mesej: 'Nama sudah diambil' })
+    // const nama_wujud = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne({ nama: nama });
+    // if (nama_wujud) return res.status(400).send({ mesej: 'Nama sudah diambil' })
 
     await pangkalan_data.db('urusmarkah').collection('pengguna').insertOne(pengguna);
     res.status(200).send({ mesej: 'Pengguna baharu berjaya dicipta' });
