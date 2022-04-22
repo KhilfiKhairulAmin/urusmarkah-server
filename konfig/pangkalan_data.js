@@ -1,4 +1,3 @@
-const { MongoClient } = require('mongodb');
 const { default: mongoose } = require('mongoose');
 
 const { MONGO_URI } = process.env;
