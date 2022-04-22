@@ -1,8 +1,8 @@
 const aplikasi = require("./aplikasi")
 
 // Penetapan port pendengaran server
-const port = 5000;
+const { API_PORT } = process.env;
 
-aplikasi.listen(port, () => {
-    console.log(`Mendengar pada port:${port}`)
+aplikasi.listen(API_PORT, () => {
+    console.log(`Mendengar pada port:${API_PORT}`)
 });
