@@ -18,9 +18,9 @@ describe('Endpoint Pengguna : /api/v1/pengguna', () => {
         else if(res.status === 200) expect(res.body.nama).toEqual(nama);
     })
 
-    it('POST /baharu sepatutnya mengembalikan mesej', async () => {
+    it('POST /daftar sepatutnya mengembalikan mesej', async () => {
         const res = await requestWithSupertest
-        .post('/api/v1/pengguna/baharu').send({emel: 'husnafarzana@silent.com', nama: 'Husna Farzana', kata_laluan: 'Husna Farzana'});
+        .post('/api/v1/pengguna/daftar').send({emel: 'husnafarzana@silent.com', nama: 'Husna Farzana', kata_laluan: 'Husna Farzana'});
         expect(res.body.mesej).toBeDefined();
     });
 
@@ -31,5 +31,17 @@ describe('Endpoint Pengguna : /api/v1/pengguna', () => {
         expect(res.status).toEqual(200);
         expect(res.body.mesej).toBeDefined();
     });
+
+    it('POST /log_masuk sepatutnya mengembalikan mesej', async () => {
+        const res = await requestWithSupertest
+        .post('/api/v1/pengguna/log_masuk')
+        .send({
+            emel: 'husna@farzana',
+            kata_laluan: 'Farzana'
+        })
+        expect(res.status).toEqual(200);
+        expect(res.body.emel).toStrictEqual('husna@farzana');
+        expect(res.body.nama).toStrictEqual('Husna');
+    })
 })
 
