@@ -1,9 +1,12 @@
 const express = require('express'); // Modul Express digunakan untuk mencipta server HTTP dan API
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const Pengguna = require('../../model/Pengguna'); // Modul Mongoose digunakan untuk menggunakan pangkalan data MongoDB
 require('../../konfig/pangkalan_data').connect();
+
+
 const cookieParser = require('cookie-parser');
 
-const crypto = require('crypto');
 
 const router = express.Router(); // Router Express digunakan untuk mengendalikan laluan pesanan (request route) oleh pengguna
 
@@ -47,50 +50,89 @@ router.put('/kemas_kini/:nama', async (req, res) => {
 /* POST cipta akaun pelanggan
 
 */
-router.post('/baharu', async (req, res) => {
+router.post('/daftar', async (req, res) => {
     try {
+        // Dapatkan nilai input
         const { emel, nama, kata_laluan } = req.body;
         
+        // Memastikan nilai tidak kosong
         if (!(emel && nama && kata_laluan)) {
             return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda'});
         }
 
-        const pengguna_lama = await Pengguna.findOne({ emel });
+        // Memastikan emel belum diambil oleh pengguna lain
+        const penggunaLama = await Pengguna.findOne({ emel });
 
-        if (pengguna_lama) {
+        if (penggunaLama) {
             return res.status(409).send({ mesej: 'Emel sudah digunakan'})
         }
 
-        const pengguna = { emel: emel, nama: nama, kata_laluan: kata_laluan};
+        // Menyulitkan kata laluan pengguna supaya tidak boleh dibaca
+        const kataLaluanDisulit = await bcrypt.hash(kata_laluan, 10);
 
-        const emel_wujud = await Pengguna.findOne({ emel: emel });
-        if (emel_wujud) return res.status(400).send({ mesej: 'Emel sudah diambil' });
+        // Mencipta akaun Pengguna menggunakan maklumat pengguna dengan kata laluan yang disulitkan
+        const pengguna = await Pengguna.create({
+            emel,
+            nama,
+            kata_laluan: kataLaluanDisulit,
+        });
 
-        // const nama_wujud = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne({ nama: nama });
-        // if (nama_wujud) return res.status(400).send({ mesej: 'Nama sudah diambil' })
+        // Mencipta token baharu untuk pengesahan kebenaran pengguna menggunakan laman sesawang
+        const token = jwt.sign(
+            { pengguna_id: pengguna._id, emel},
+            process.env.TOKEN_KEY,
+            {
+                expiresIn: '15s'
+            }
+        );
 
-        await Pengguna.insertMany([pengguna]);
-        res.status(200).send({ mesej: 'Pengguna baharu berjaya dicipta' });
+        // Mengumpukkan nilai token
+        pengguna.token = token;
+
+        // Mengembalikan token dan data pengguna
+        return res.status(201).json(pengguna);
+
     } catch (err) {
+        // Ralat berlaku
         console.log(err);
     }
-})
-
-router.post('/log_masuk', async (req, res) => {
-    const { emel, kata_laluan } = req.body;
-    if (!emel || !kata_laluan ) return res.status(400).send({mesej: 'Sila lengkapkan butiran anda'});
-    const pengguna = { emel: emel };
-    const dokumen = await pangkalan_data.db('urusmarkah').collection('pengguna').findOne(pengguna);
-    if (kata_laluan !== dokumen.kata_laluan ) return res.status(400).send({ mesej: 'Emel atau kata laluan salah'});
-    // return res.status(200).send({mesej: 'Login berjaya!'});
-    const session = janaIdSession(emel);
-    await pangkalan_data.db().collection('session').insertOne({ session_id: session });
-
-    res.cookie('session_id', session, { maxAge: 1000000});
-    res.status(200).end();
 });
 
-router.get('/log_masuk/pengguna', cookieParser(),  async (req, res) => {
+/* POST log masuk akaun pengguna
+
+*/
+router.post('/log_masuk', async (req, res) => {
+    try {
+        const { emel, kata_laluan } = req.body;
+
+        if (!(emel && kata_laluan)) {
+            res.status(400).send({mesej: 'Sila lengkapkan butiran anda'});
+        }
+        
+        const pengguna = await Pengguna.findOne({ emel });
+
+        if (pengguna && (await bcrypt.compare(kata_laluan, pengguna.kata_laluan))) {
+            const token = jwt.sign(
+                { pengguna_id: pengguna._id, emel },
+                process.env.TOKEN_KEY,
+                {
+                    expiresIn: '15s',
+                }
+            );
+
+            pengguna.token = token;
+
+            return res.status(200).json(pengguna);
+        }
+
+        res.status(400).send({ mesej: 'Emel atau kata laluan salah'})
+
+    } catch (err) {
+        console.log(err)
+    }
+});
+
+router.get('/log_masuk', cookieParser(),  async (req, res) => {
     const { session_id } = req.cookies;
     console.log(req.cookies, session_id)
     if (!session_id) return res.status(400).send({ mesej: 'Session dilarang'});
