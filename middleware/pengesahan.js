@@ -14,7 +14,7 @@ const verifyToken = (req, res, next) => {
         const nyahsulit = jwt.verify(token, config.TOKEN_KEY);
         req.pengguna = nyahsulit;
     } catch (err) {
-        return res.status(401).send('Token tidak sah');
+        return res.status(401).send({ mesej: 'Token tidak sah'});
     }
     return next();
 }

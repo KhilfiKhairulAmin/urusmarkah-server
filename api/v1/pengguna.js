@@ -40,12 +40,34 @@ router.get('/satu/:nama', async (req, res) => {
 /*  PUT (kemas kini) pelanggan
 
 */
-router.put('/kemas_kini/:nama', pengesahan, async (req, res) => {
-    const { nama } = req.params;
-    const tapisan = { nama: nama }; // Tetapkan ciri nama dalam tapisan kepada nilai nama dalam pesanan
-    const kemas_kini = { $set : req.body};
-    await Pengguna.findOneAndUpdate(tapisan, kemas_kini);
-    res.send({ mesej: 'Pengguna berjaya dikemaskini'});
+router.put('/kemas_kini/:Nama', pengesahan, async (req, res) => {
+    try {
+        // Dapatkan nilai input
+        const { kata_laluan } = req.body;
+        const { pengguna } = req;
+        const { Nama } = req.params;
+
+        // Memastikan nama adalah sama
+        if (pengguna.nama !== Nama) {
+            return res.status(403).send({ mesej: 'Aksi tidak dibenarkan', pengguna})
+        }
+
+        // Menyulitkan kata laluan
+        const kataLaluanDisulit = await bcrypt.hash(kata_laluan, 10);
+
+        const tapisan = { nama: Nama };
+        const kemas_kini = { $set : { kata_laluan: kataLaluanDisulit} };
+
+        // Mengemaskini maklumat pengguna
+        await Pengguna.findOneAndUpdate(tapisan, kemas_kini, (err, doc) => {
+            if (err) throw err;
+            doc.mesej = 'Pengguna berjaya dikemaskini';
+            return res.status(200).json(doc);
+        });
+
+    } catch (err) {
+        console.log(err);
+    }
 })
 
 /* POST cipta akaun pelanggan
@@ -104,30 +126,37 @@ router.post('/daftar', async (req, res) => {
 */
 router.post('/log_masuk', async (req, res) => {
     try {
+        // Dapatkan nilai input
         const { emel, kata_laluan } = req.body;
 
+        // Memastikan input tidak kosong
         if (!(emel && kata_laluan)) {
-            res.status(400).send({mesej: 'Sila lengkapkan butiran anda'});
+            return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda' });
         }
         
+        // Mencari emel pengguna
         const pengguna = await Pengguna.findOne({ emel });
 
+        // Memastikan pengguna wujud dan kata laluan betul
         if (pengguna && (await bcrypt.compare(kata_laluan, pengguna.kata_laluan))) {
+
+            // Membuat token JWT baharu
             const token = jwt.sign(
-                { pengguna_id: pengguna._id, emel },
+                { pengguna_id: pengguna._id, emel, nama: pengguna.nama },
                 process.env.TOKEN_KEY,
                 {
-                    expiresIn: '15s',
+                    expiresIn: '30s',
                 }
             );
 
+            // Mengumpukkan nilai token
             pengguna.token = token;
 
+            // Menghantar response
             return res.status(200).json(pengguna);
         }
 
         res.status(400).send({ mesej: 'Emel atau kata laluan salah'})
-
     } catch (err) {
         console.log(err)
     }
