@@ -2,6 +2,7 @@ const express = require('express'); // Modul Express digunakan untuk mencipta se
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Pengguna = require('../../model/Pengguna'); // Modul Mongoose digunakan untuk menggunakan pangkalan data MongoDB
+const pengesahan = require('../../middleware/pengesahan')
 require('../../konfig/pangkalan_data').connect();
 
 
@@ -39,7 +40,7 @@ router.get('/satu/:nama', async (req, res) => {
 /*  PUT (kemas kini) pelanggan
 
 */
-router.put('/kemas_kini/:nama', async (req, res) => {
+router.put('/kemas_kini/:nama', pengesahan, async (req, res) => {
     const { nama } = req.params;
     const tapisan = { nama: nama }; // Tetapkan ciri nama dalam tapisan kepada nilai nama dalam pesanan
     const kemas_kini = { $set : req.body};
