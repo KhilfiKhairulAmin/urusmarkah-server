@@ -1,15 +1,26 @@
+// Mengendalikan HTTP request
 const express = require('express');
 const router = express.Router();
+
+// Menyediakan algoritma penyulitan
 const bcrypt = require('bcryptjs');
+
+// Menjana dan mengesahkan JWT (JSON Web Token)
 const jwt = require('jsonwebtoken');
+
+// Model data pengguna
 const Pengguna = require('../../model/Pengguna');
+
+// Mengendalikan kesahan dan kebenaran (authentication and authorization) pengguna
 const pengesahan = require('../../middleware/pengesahan')
+
+// Import fungsi-fungsi kemudahan
 const deleteUndefinedProps = require('../../util/deleteUndefinedProps');
-const cookieParser = require('cookie-parser');
+
+
 
 // Membuat hubungan dengan pangkalan data
 require('../../konfig/pangkalan_data').connect(); 
-
 
 /*  GET semua pelanggan
 
@@ -22,13 +33,19 @@ router.get('/semua', async (req, res) => {
 /*  GET pelanggan
 
 */
-router.get('/satu/:nama', async (req, res) => {
-    const { nama } = req.params;
-    if (!nama) return res.status(400).send({ mesej: 'Perlukan nama'}); // Kembalikan mesej ralat
-    const carian = { nama: nama };
-    const dokumen = await Pengguna.findOne(carian) // Cari 1 dokumen mempunyai nilai `nama` yang sama (===)
-    if (!dokumen) return res.status(400).send({ mesej: 'Pengguna tidak wujud'});
-    res.status(200).send(dokumen);
+router.get('/pertandingan', pengesahan, async (req, res) => {
+    try {
+        // Dapatkan params dan maklumat pengguna
+        const { pengguna_id } = req.pengguna;
+        console.log(`id = ${pengguna_id}`);
+        // Mendapatkan keseluruhan maklumat pengguna
+        const maklumatPengguna = await Pengguna.findById(pengguna_id);
+
+        return res.status(200).json(maklumatPengguna);
+    } catch (err) {
+        // Ralat berlaku
+        console.log(err);
+    }
 })
 
 /*  PUT (kemas kini) pelanggan
@@ -96,27 +113,35 @@ router.post('/daftar', async (req, res) => {
         // Menyulitkan kata laluan pengguna supaya tidak boleh dibaca
         const kataLaluanDisulit = await bcrypt.hash(kata_laluan, 10);
 
-        // Mencipta akaun Pengguna menggunakan maklumat pengguna dengan kata laluan yang disulitkan
+        // Mencipta akaun Pengguna
         const pengguna = await Pengguna.create({
             emel,
             nama,
             kata_laluan: kataLaluanDisulit,
         });
 
-        // Mencipta token baharu untuk pengesahan kebenaran pengguna menggunakan laman sesawang
+        const muatan = { pengguna_id: pengguna._id, emel};
+
+        // Mencipta token baharu
         const token = jwt.sign(
-            { pengguna_id: pengguna._id, emel},
+            muatan,
             process.env.TOKEN_KEY,
             {
-                expiresIn: '15s'
+                expiresIn: '3m'
             }
         );
 
-        // Mengumpukkan nilai token
-        pengguna.token = token;
+        // Mencipta refresh token baharu
+        const refreshToken = jwt.sign(
+            muatan,
+            process.env.REFRESH_TOKEN_KEY,
+            {
+                expiresIn: '5m'
+            }
+        );
 
-        // Mengembalikan token dan data pengguna
-        return res.status(201).json(pengguna);
+        // Mengembalikan maklumat akaun dan token
+        return res.status(201).json({ token, refreshToken });
 
     } catch (err) {
         // Ralat berlaku
@@ -159,21 +184,11 @@ router.post('/log_masuk', async (req, res) => {
             return res.status(200).json(pengguna);
         }
 
-        res.status(400).send({ mesej: 'Emel atau kata laluan salah'})
+        res.status(400).send({ mesej: 'Emel atau kata laluan salah'});
     } catch (err) {
         console.log(err)
     }
 });
 
-router.get('/log_masuk', cookieParser(),  async (req, res) => {
-    const { session_id } = req.cookies;
-    console.log(req.cookies, session_id)
-    if (!session_id) return res.status(400).send({ mesej: 'Session dilarang'});
-    const session = await pangkalan_data.db().collection('session').findOne({ session_id: session_id});
-    const { emel } = req.query;
-    const maklumat_pengguna = await pangkalan_data.db().collection('pengguna').findOne({ emel: emel });
-    console.log(maklumat_pengguna)
-    res.status(200).send(maklumat_pengguna);
-})
-
-module.exports = router // Mengeksport router untuk digunakan oleh aplikasi
+// Mengeksport router untuk digunakan oleh aplikasi
+module.exports = router;
