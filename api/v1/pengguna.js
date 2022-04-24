@@ -1,20 +1,14 @@
-const express = require('express'); // Modul Express digunakan untuk mencipta server HTTP dan API
+const express = require('express');
+const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const Pengguna = require('../../model/Pengguna'); // Modul Mongoose digunakan untuk menggunakan pangkalan data MongoDB
+const Pengguna = require('../../model/Pengguna');
 const pengesahan = require('../../middleware/pengesahan')
-require('../../konfig/pangkalan_data').connect();
-
-
+const deleteUndefinedProps = require('../../util/deleteUndefinedProps');
 const cookieParser = require('cookie-parser');
 
-
-const router = express.Router(); // Router Express digunakan untuk mengendalikan laluan pesanan (request route) oleh pengguna
-
-const janaIdSession = (kunci_unik) => {
-    const random = crypto.randomInt(1,100);
-    return crypto.createHash('sha256').update(kunci_unik + random, 'utf8').digest('hex');
-}
+// Membuat hubungan dengan pangkalan data
+require('../../konfig/pangkalan_data').connect(); 
 
 
 /*  GET semua pelanggan
@@ -40,28 +34,37 @@ router.get('/satu/:nama', async (req, res) => {
 /*  PUT (kemas kini) pelanggan
 
 */
-router.put('/kemas_kini/:Nama', pengesahan, async (req, res) => {
+router.put('/kemas_kini', pengesahan, async (req, res) => {
     try {
         // Dapatkan nilai input
-        const { kata_laluan } = req.body;
+        const { emel, nama, kata_laluan } = req.body;
         const { pengguna } = req;
-        const { Nama } = req.params;
 
-        // Memastikan nama adalah sama
-        if (pengguna.nama !== Nama) {
-            return res.status(403).send({ mesej: 'Aksi tidak dibenarkan', pengguna})
+        // Memastikan emel tidak kosong
+        if (!emel) {
+            return res.status(400).send({ mesej: 'Emel diperlukan'})
         }
 
-        // Menyulitkan kata laluan
-        const kataLaluanDisulit = await bcrypt.hash(kata_laluan, 10);
+        // Memastikan nama adalah sama
+        if (pengguna.emel !== emel) {
+            return res.status(403).send({ mesej: 'Aksi tidak dibenarkan' })
+        }
 
-        const tapisan = { nama: Nama };
-        const kemas_kini = { $set : { kata_laluan: kataLaluanDisulit} };
+        let kataLaluanDisulit;
+
+        // Jika parameter kata laluan diberi
+        if (kata_laluan) {
+            // Menyulitkan kata laluan
+            kataLaluanDisulit = await bcrypt.hash(kata_laluan, 10);
+        }
+
+        // Emel sebagai kunci unik, manakala nama dan kata laluan ialah kunci biasa yang boleh dikemaskini
+        const tapisan = { emel };
+        const kemas_kini = { $set : deleteUndefinedProps({ nama, kata_laluan: kataLaluanDisulit }) };
 
         // Mengemaskini maklumat pengguna
-        await Pengguna.findOneAndUpdate(tapisan, kemas_kini, (err, doc) => {
+        await Pengguna.findOneAndUpdate(tapisan, kemas_kini, { new: true, runValidators: true }, (err, doc) => {
             if (err) throw err;
-            doc.mesej = 'Pengguna berjaya dikemaskini';
             return res.status(200).json(doc);
         });
 
@@ -145,7 +148,7 @@ router.post('/log_masuk', async (req, res) => {
                 { pengguna_id: pengguna._id, emel, nama: pengguna.nama },
                 process.env.TOKEN_KEY,
                 {
-                    expiresIn: '30s',
+                    expiresIn: '1h',
                 }
             );
 

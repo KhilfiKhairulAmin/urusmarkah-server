@@ -42,6 +42,6 @@ describe('Endpoint Pengguna : /api/v1/pengguna', () => {
         expect(res.status).toEqual(200);
         expect(res.body.emel).toStrictEqual('husna@farzana');
         expect(res.body.nama).toStrictEqual('Husna');
-    })
+    });
 })
 
