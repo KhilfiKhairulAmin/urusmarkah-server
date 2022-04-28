@@ -3,14 +3,16 @@ require('dotenv').config()
 const aplikasi = express();
 const cors = require('cors');
 
-
 aplikasi.use(cors(), express.json());
 
 // Penetapan router yang digunakan
-const indexRoute = require('./api/v1/index');
-aplikasi.use('/', indexRoute);
+const routeIndex = require('./api/index');
+aplikasi.use('/', routeIndex);
 
-const penggunaRoute = require('./api/v1/pengguna');
-aplikasi.use('/api/v1/pengguna', penggunaRoute);
+const routeAuthentication = require('./api/auth');
+aplikasi.use('/pengesahan', routeAuthentication);
+
+const routePengguna = require('./api/pengguna');
+aplikasi.use('/api/v1/pengguna', routePengguna);
 
 module.exports = aplikasi;

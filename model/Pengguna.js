@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+const { Schema, model } = require('mongoose');
 
-const skemaPengguna = new mongoose.Schema({
+const skemaPengguna = new Schema({
     emel: { type: String, unique: true},
     nama: { type: String },
     kata_laluan: { type: String },
-    token: { type: String }
+    refreshToken: { type: [String] }
 });
 
-module.exports = mongoose.model('pengguna', skemaPengguna, 'pengguna');
+module.exports = model('pengguna', skemaPengguna, 'pengguna');
