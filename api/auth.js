@@ -17,7 +17,12 @@ const pengesahan = require('../middleware/pengesahanToken')
 // Import fungsi-fungsi kemudahan
 const deleteUndefinedProps = require('../util/deleteUndefinedProps');
 
-// Fungsi untuk menjana JWT Token bagi aplikasi ini
+/**
+ * Fungsi standard bagi aplikasi ini untuk menjana JWT Token
+ * @param {string | object | Buffer} payload Data yang mahu disimpan dalam token
+ * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
+ * @returns 
+ */
 const generateJWTToken = (payload, { secretEnvKey, expiresIn = '10m' }) => {
     return jwt.sign(
         payload,
