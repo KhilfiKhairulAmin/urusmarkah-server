@@ -1,8 +1,11 @@
-const { MongoClient } = require('mongodb');
 const { default: mongoose } = require('mongoose');
 
 const { MONGO_URI } = process.env;
 
+/**
+ * Menciptakan hubungan dengan pangkalan data
+ * @pangkalan_data Urusmarkah
+ */
 exports.connect = () => {
     mongoose
         .connect(MONGO_URI)
