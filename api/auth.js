@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 
 // Model data pengguna
 const Pengguna = require('../model/Pengguna');
+const Validasi = require('../model/Validasi');
 
 // Mengendalikan kesahan dan kebenaran (authentication and authorization) pengguna
 const pengesahan = require('../middleware/pengesahanToken')
@@ -184,7 +185,7 @@ router.post('/token', async (req, res) => {
         await Pengguna.updateOne({ _id: pengesahan._id }, {
             refreshToken: []
         });
-        
+
         return res.status(403).send({ mesej: 'Token sudah luput' });
     }
 });
