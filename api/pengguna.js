@@ -49,38 +49,46 @@ router.get('/maklumat_pengguna', pengesahan, async (req, res) => {
 */
 router.put('/kemas_kini', pengesahan, async (req, res) => {
     try {
-        // Dapatkan nilai input
-        const { emel, nama, kata_laluan } = req.body;
-        const { pengguna } = req;
+        const { _id } = req.pengguna;
 
-        // Memastikan emel tidak kosong
-        if (!emel) {
-            return res.status(400).send({ mesej: 'Emel diperlukan'})
+        // Mencari pengguna
+        const pengguna = await Pengguna.findById({ _id });
+
+        // Memastikan pengguna wujud
+        if (!pengguna) {
+            return res.status(403).send({ mesej: 'Pengguna tidak wujud' });
         }
 
-        // Memastikan nama adalah sama
-        if (pengguna.emel !== emel) {
-            return res.status(403).send({ mesej: 'Aksi tidak dibenarkan' })
-        }
+        const { nama, kata_laluan_lama, kata_laluan_baharu } = req.body;
 
-        let kataLaluanDisulit;
+        // Jika pengguna ingin mengemaskini KATA LALUAN...
+        // Menguji jika parameter kata laluan lama diberi
+        if (kata_laluan_baharu) {
 
-        // Jika parameter kata laluan diberi
-        if (kata_laluan) {
+            // Memastikan kesahan kata laluan lama
+            if (!(await bcrypt.compare(kata_laluan_lama ? kata_laluan_lama : '', pengguna.kata_laluan))) {
+                return res.status(400).send({ mesej: 'Kata laluan salah' });
+            }
+
             // Menyulitkan kata laluan
-            kataLaluanDisulit = await bcrypt.hash(kata_laluan, 10);
+            const kataLaluanDisulit = await bcrypt.hash(kata_laluan_baharu, 10);
+
+            // Mengemaskini kata laluan pengguna
+            pengguna.kata_laluan = kataLaluanDisulit;
         }
 
-        // Emel sebagai kunci unik, manakala nama dan kata laluan ialah kunci biasa yang boleh dikemaskini
-        const tapisan = { emel };
-        const kemas_kini = { $set : deleteUndefinedProps({ nama, kata_laluan: kataLaluanDisulit }) };
+        // Memastikan nama diberikan
+        if (!nama) {
+            return res.status(400).send({ mesej: 'Nama diperlukan' });
+        }
 
-        // Mengemaskini maklumat pengguna
-        await Pengguna.findOneAndUpdate(tapisan, kemas_kini, { new: true, runValidators: true }, (err, doc) => {
-            if (err) throw err;
-            return res.status(200).json(doc);
-        });
+        // Mengemaskini nama pengguna
+        pengguna.nama = nama;
 
+        // Menyimpan maklumat dalam pangkalan data
+        pengguna.save();
+
+        res.status(400).send(pengguna)
     } catch (err) {
         console.log(err);
     }

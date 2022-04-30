@@ -24,7 +24,7 @@ const deleteUndefinedProps = require('../util/deleteUndefinedProps');
  * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
  * @returns 
  */
-const generateJWTToken = (payload, { secretEnvKey, expiresIn = '30s' }) => {
+const generateJWTToken = (payload, { secretEnvKey, expiresIn = '10m' }) => {
     return jwt.sign(
         payload,
         process.env[secretEnvKey],
