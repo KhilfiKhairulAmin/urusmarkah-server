@@ -105,7 +105,7 @@ router.post('/log_masuk', async (req, res) => {
             return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda' });
         }
 
-        // Mencari emel pengguna
+        // Mencari pengguna
         const pengguna = await Pengguna.findOne({ emel });
 
         // Memastikan pengguna wujud dan kata laluan betul
@@ -120,9 +120,9 @@ router.post('/log_masuk', async (req, res) => {
             const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
             // Memasukkan refresh token baharu
-            await Pengguna.updateOne({ _id: pengguna._id }, {
-                refreshToken: [refreshToken, ...pengguna.refreshToken]
-            })
+            const validasi = await Validasi.findOne({ pengguna_id: pengguna._id });
+            validasi.refresh_token.unshift(refreshToken);
+            validasi.save();
 
             // Menghantar response
             return res.status(200).json({ token, refreshToken });
