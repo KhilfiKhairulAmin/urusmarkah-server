@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 
 // Model data pengguna
 const Pengguna = require('../model/Pengguna');
+const Validasi = require('../model/Validasi');
 
 // Mengendalikan kesahan dan kebenaran (authentication and authorization) pengguna
 const pengesahan = require('../middleware/pengesahanToken')
@@ -63,24 +64,27 @@ router.post('/daftar', async (req, res) => {
         const pengguna = new Pengguna ({
             emel,
             nama,
-            kata_laluan: kataLaluanDisulit,
-            refreshToken: []
+            kata_laluan: kataLaluanDisulit
         });
 
         const muatan = { _id: pengguna._id };
 
-        // Mencipta token baharu
+        // Mencipta token dan refresh token baharu
         const token = generateJWTToken(muatan, { secretEnvKey: 'TOKEN_KEY' })
-
-        // Mencipta refresh token baharu
         const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' })
 
-        pengguna.refreshToken.unshift(refreshToken);
+        // Mencipta validasi
+        const validasi = new Validasi ({
+            pengguna_id: pengguna._id,
+            refresh_token: refreshToken
+        });
 
+        // Menyimpan maklumat dalam pangkalan data
         pengguna.save();
+        validasi.save();
 
         // Mengembalikan maklumat akaun dan token
-        return res.status(201).json({ token, refreshToken });
+        res.status(201).json({ token, refreshToken });
 
     } catch (err) {
         // Ralat berlaku
@@ -101,7 +105,7 @@ router.post('/log_masuk', async (req, res) => {
             return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda' });
         }
 
-        // Mencari emel pengguna
+        // Mencari pengguna
         const pengguna = await Pengguna.findOne({ emel });
 
         // Memastikan pengguna wujud dan kata laluan betul
@@ -116,9 +120,9 @@ router.post('/log_masuk', async (req, res) => {
             const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
             // Memasukkan refresh token baharu
-            await Pengguna.updateOne({ _id: pengguna._id }, {
-                refreshToken: [refreshToken, ...pengguna.refreshToken]
-            })
+            const validasi = await Validasi.findOne({ pengguna_id: pengguna._id });
+            validasi.refresh_token.unshift(refreshToken);
+            validasi.save();
 
             // Menghantar response
             return res.status(200).json({ token, refreshToken });
@@ -135,57 +139,58 @@ router.post('/token', async (req, res) => {
         // Dapatkan token daripada request headers
         const authorization = req.headers['authorization'];
         const bearer = authorization.split(' ');
-        const currentRefreshToken = bearer[1];
+        const refreshTokenDiberi = bearer[1];
 
         // Memastikan refresh token wujud
-        if(!currentRefreshToken) {
+        if(!refreshTokenDiberi) {
             return res.status(400).send({ mesej: 'Refresh token diperlukan'});
         }
 
         // Mendapatkan pengguna yang memegang refresh token tersebut
-        const pengesahan = await Pengguna.findOne({ refreshToken: currentRefreshToken });
+        const validasi = await Validasi.findOne({ refresh_token: refreshTokenDiberi });
 
         // Memastikan ada pengguna yang memegang refresh token
-        if(!pengesahan) {
+        if(!validasi) {
             return res.status(403).send({ mesej: 'Refresh token tidak wujud. Redirecting ke laman log masuk...'});
         }
 
-        // Menguji sama ada refresh token belum luput
-        jwt.verify(currentRefreshToken, process.env.REFRESH_TOKEN_KEY);
+        try {
+            // Menguji sama ada refresh token belum luput
+            jwt.verify(refreshTokenDiberi, process.env.REFRESH_TOKEN_KEY);
+        } catch (err) {
+            // Menghapuskan semua refresh token
+            validasi.refresh_token = [];
+            validasi.save();
+
+            return res.status(403).send({ mesej: 'Refresh token tidak sah. Redirecting ke laman log masuk...'});
+        }
 
         // Memastikan refresh token merupakan refresh token yang terkini
-        if (pengesahan.refreshToken[0] !== currentRefreshToken) {
+        if (refreshTokenDiberi !== validasi.refresh_token[0]) {
             // Jika refresh token merupakan refresh token lama
-            // Menghapuskan semua refresh token pengguna supaya pengguna perlu log masuk semula dan dapatkan refresh token baharu
-            await Pengguna.updateOne({ _id: pengesahan._id }, {
-                refreshToken: []
-            });
+            // Menghapuskan semua refresh token
+            validasi.refresh_token = [];
+            validasi.save();
 
             return res.status(403).send({ mesej: 'Refresh token tidak sah. Redirecting ke laman log masuk...'});
         }
 
         // Pengguna yang sah
-        const muatan = { _id: pengesahan._id };
+        const muatan = { _id: validasi._id };
 
         // Menajana token dan refresh token baharu
         const token = generateJWTToken(muatan, { secretEnvKey: 'TOKEN_KEY' });
         const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
         // Memasukkan refresh token terkini ke dalam pengguna
-        await Pengguna.updateOne({ _id: pengesahan._id }, {
-            $set: {refreshToken: [refreshToken, ...pengesahan.refreshToken]}
-        })
+        validasi.refresh_token.unshift(refreshToken);
+        validasi.save();
 
         res.status(201).json({ token, refreshToken })
 
     } catch (err) {
         console.log(err);
-        // Menghapuskan semua refresh token pengguna supaya pengguna perlu log masuk semula dan dapatkan refresh token baharu
-        await Pengguna.updateOne({ _id: pengesahan._id }, {
-            refreshToken: []
-        });
-        
-        return res.status(403).send({ mesej: 'Token sudah luput' });
+        return res.status(500).send({ mesej: 'Masalah dalam server' });
     }
 });
 
