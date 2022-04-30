@@ -41,7 +41,7 @@ router.get('/maklumat_pengguna', pengesahan, async (req, res) => {
         // Ralat berlaku
         console.log(err);
     }
-})
+});
 
 
 /*  PUT (kemas kini) pelanggan
@@ -84,7 +84,7 @@ router.put('/kemas_kini', pengesahan, async (req, res) => {
     } catch (err) {
         console.log(err);
     }
-})
+});
 
 // Mengeksport router untuk digunakan oleh aplikasi
 module.exports = router;
