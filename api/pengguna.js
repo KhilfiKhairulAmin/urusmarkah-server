@@ -28,7 +28,7 @@ router.get('/semua', async (req, res) => {
 /*  GET pelanggan
 
 */
-router.get('/pertandingan', pengesahan, async (req, res) => {
+router.get('/maklumat_pengguna', pengesahan, async (req, res) => {
     try {
         // Dapatkan params dan maklumat pengguna
         const { _id } = req.pengguna;

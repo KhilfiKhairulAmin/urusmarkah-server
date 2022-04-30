@@ -24,6 +24,7 @@ const pengesahanToken = (req, res, next) => {
 
     } catch (err) {
         // Token tidak sah
+        console.log(err);
         return res.status(403).send({ mesej: 'Token tidak sah'});
     }
     return next();

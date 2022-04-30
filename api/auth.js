@@ -23,7 +23,7 @@ const deleteUndefinedProps = require('../util/deleteUndefinedProps');
  * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
  * @returns 
  */
-const generateJWTToken = (payload, { secretEnvKey, expiresIn = '10m' }) => {
+const generateJWTToken = (payload, { secretEnvKey, expiresIn = '30s' }) => {
     return jwt.sign(
         payload,
         process.env[secretEnvKey],
@@ -137,19 +137,26 @@ router.post('/token', async (req, res) => {
         const bearer = authorization.split(' ');
         const currentRefreshToken = bearer[1];
 
+        // Memastikan refresh token wujud
         if(!currentRefreshToken) {
             return res.status(400).send({ mesej: 'Refresh token diperlukan'});
         }
 
+        // Mendapatkan pengguna yang memegang refresh token tersebut
         const pengesahan = await Pengguna.findOne({ refreshToken: currentRefreshToken });
 
+        // Memastikan ada pengguna yang memegang refresh token
         if(!pengesahan) {
             return res.status(403).send({ mesej: 'Refresh token tidak wujud. Redirecting ke laman log masuk...'});
         }
 
+        // Menguji sama ada refresh token belum luput
         jwt.verify(currentRefreshToken, process.env.REFRESH_TOKEN_KEY);
 
+        // Memastikan refresh token merupakan refresh token yang terkini
         if (pengesahan.refreshToken[0] !== currentRefreshToken) {
+            // Jika refresh token merupakan refresh token lama
+            // Menghapuskan semua refresh token pengguna supaya pengguna perlu log masuk semula dan dapatkan refresh token baharu
             await Pengguna.updateOne({ _id: pengesahan._id }, {
                 refreshToken: []
             });
@@ -157,12 +164,14 @@ router.post('/token', async (req, res) => {
             return res.status(403).send({ mesej: 'Refresh token tidak sah. Redirecting ke laman log masuk...'});
         }
 
+        // Pengguna yang sah
         const muatan = { _id: pengesahan._id };
 
+        // Menajana token dan refresh token baharu
         const token = generateJWTToken(muatan, { secretEnvKey: 'TOKEN_KEY' });
-
         const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
+        // Memasukkan refresh token terkini ke dalam pengguna
         await Pengguna.updateOne({ _id: pengesahan._id }, {
             $set: {refreshToken: [refreshToken, ...pengesahan.refreshToken]}
         })
@@ -171,7 +180,12 @@ router.post('/token', async (req, res) => {
 
     } catch (err) {
         console.log(err);
-        return res.status(403).send({ mesej: 'Token sudah luput'});
+        // Menghapuskan semua refresh token pengguna supaya pengguna perlu log masuk semula dan dapatkan refresh token baharu
+        await Pengguna.updateOne({ _id: pengesahan._id }, {
+            refreshToken: []
+        });
+        
+        return res.status(403).send({ mesej: 'Token sudah luput' });
     }
 });
 
