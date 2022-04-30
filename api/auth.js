@@ -64,24 +64,27 @@ router.post('/daftar', async (req, res) => {
         const pengguna = new Pengguna ({
             emel,
             nama,
-            kata_laluan: kataLaluanDisulit,
-            refreshToken: []
+            kata_laluan: kataLaluanDisulit
         });
 
         const muatan = { _id: pengguna._id };
 
-        // Mencipta token baharu
+        // Mencipta token dan refresh token baharu
         const token = generateJWTToken(muatan, { secretEnvKey: 'TOKEN_KEY' })
-
-        // Mencipta refresh token baharu
         const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' })
 
-        pengguna.refreshToken.unshift(refreshToken);
+        // Mencipta validasi
+        const validasi = new Validasi ({
+            pengguna_id: pengguna._id,
+            refresh_token: refreshToken
+        });
 
+        // Menyimpan maklumat dalam pangkalan data
         pengguna.save();
+        validasi.save();
 
         // Mengembalikan maklumat akaun dan token
-        return res.status(201).json({ token, refreshToken });
+        res.status(201).json({ token, refreshToken });
 
     } catch (err) {
         // Ralat berlaku
