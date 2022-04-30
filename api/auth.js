@@ -12,19 +12,13 @@ const jwt = require('jsonwebtoken');
 const Pengguna = require('../model/Pengguna');
 const Validasi = require('../model/Validasi');
 
-// Mengendalikan kesahan dan kebenaran (authentication and authorization) pengguna
-const pengesahan = require('../middleware/pengesahanToken')
-
-// Import fungsi-fungsi kemudahan
-const deleteUndefinedProps = require('../util/deleteUndefinedProps');
-
 /**
- * Fungsi standard bagi aplikasi ini untuk menjana JWT Token
+ * Fungsi standard bagi aplikasi untuk menjana JWT Token
  * @param {string | object | Buffer} payload Data yang mahu disimpan dalam token
  * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
  * @returns 
  */
-const generateJWTToken = (payload, { secretEnvKey, expiresIn = '10m' }) => {
+const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '10m' }) => {
     return jwt.sign(
         payload,
         process.env[secretEnvKey],
@@ -70,8 +64,8 @@ router.post('/daftar', async (req, res) => {
         const muatan = { _id: pengguna._id };
 
         // Mencipta token dan refresh token baharu
-        const token = generateJWTToken(muatan, { secretEnvKey: 'TOKEN_KEY' })
-        const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' })
+        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' })
+        const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' })
 
         // Mencipta validasi
         const validasi = new Validasi ({
@@ -114,10 +108,10 @@ router.post('/log_masuk', async (req, res) => {
             const muatan = { _id: pengguna._id }
 
             // Membuat token JWT baharu
-            const token = generateJWTToken(muatan, { secretEnvKey: 'TOKEN_KEY' });
+            const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' });
 
             // Mencipta refresh token baharu
-            const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
+            const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
             // Memasukkan refresh token baharu
             const validasi = await Validasi.findOne({ pengguna_id: pengguna._id });
@@ -179,8 +173,8 @@ router.post('/token', async (req, res) => {
         const muatan = { _id: validasi._id };
 
         // Menajana token dan refresh token baharu
-        const token = generateJWTToken(muatan, { secretEnvKey: 'TOKEN_KEY' });
-        const refreshToken = generateJWTToken(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
+        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' });
+        const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
         // Memasukkan refresh token terkini ke dalam pengguna
         validasi.refresh_token.unshift(refreshToken);
@@ -190,7 +184,7 @@ router.post('/token', async (req, res) => {
 
     } catch (err) {
         console.log(err);
-        return res.status(500).send({ mesej: 'Masalah dalam server' });
+        return res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
 });
 

@@ -5,7 +5,7 @@ const skemaPeserta = new Schema({
     pertandingan_id: { type: String },
     nama_peserta: { type: String },
     markah: { type: [skemaMarkah] },
-    metadata: { type: Object }
+    maklumat_tambahan: { type: Object }
 });
 
 module.exports = model('peserta', skemaPeserta, 'peserta');
