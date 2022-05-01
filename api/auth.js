@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 // Model data pengguna
 const Pengguna = require('../model/Pengguna');
 const Validasi = require('../model/Validasi');
+const pengesahanToken = require('../middleware/pengesahanToken');
 
 /**
  * Fungsi standard bagi aplikasi untuk menjana JWT Token
@@ -128,7 +129,7 @@ router.post('/log_masuk', async (req, res) => {
     }
 });
 
-router.post('/token', async (req, res) => {
+router.get('/token', async (req, res) => {
     try {
         // Dapatkan token daripada request headers
         const authorization = req.headers['authorization'];
@@ -186,6 +187,20 @@ router.post('/token', async (req, res) => {
         console.log(err);
         return res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
+});
+
+post.post('/log_keluar', pengesahanToken, async (req, res) => {
+    const validasi = await Validasi.findOne({ pengguna_id: req.pengguna._id });
+
+    if (!validasi) {
+        return res.status(403).send({ mesej: 'Pengguna tidak wujud' })
+    }
+
+    validasi.refresh_token = [];
+
+    validasi.save();
+
+    res.status(200).send({ mesej: 'Log keluar berjaya' });
 });
 
 // Mengeksport router untuk digunakan oleh aplikasi
