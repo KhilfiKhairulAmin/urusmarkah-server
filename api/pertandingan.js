@@ -1,4 +1,5 @@
 const express = require('express');
+const pengesahanPertandingan = require('../middleware/pengesahanPertandingan');
 const Pertandingan = require('../model/Pertandingan');
 const router = express.Router();
 
@@ -11,9 +12,11 @@ const tarikhHariIni = () => {
     return `${tttt}-${bb}-${hh}`;
 }
 
-router.get('/:pertandingan_id', (req, res) => {
-    const { pertandingan_id } = req.params;
-})
+router.get('/:pertandingan_id', pengesahanPertandingan ,(req, res) => {
+    const { pertandingan } = req;
+
+    return res.status(200).send(pertandingan);
+});
 
 router.post('/cipta_pertandingan', (req, res) => {
     try {
@@ -35,13 +38,13 @@ router.post('/cipta_pertandingan', (req, res) => {
             metadata: {
                 tarikh_dibuat: tarikhHariIni()
             }
-        })
+        });
         
         const error = pertandingan.validateSync();
 
         if (error) {
             console.log(error);
-            return res.status(400).send({ mesej: 'Periksa semula body request'})
+            return res.status(400).send({ mesej: 'Periksa semula body request' });
         }
 
         pertandingan.save();
@@ -51,7 +54,7 @@ router.post('/cipta_pertandingan', (req, res) => {
         console.log(err);
         return res.status(500).send({ mesej: 'Ralat dalaman server' });
     }
-})
+});
 
 
 

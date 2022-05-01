@@ -2,7 +2,7 @@ const { Schema, model } = require('mongoose');
 
 
 const skemaPertandingan = new Schema({
-    pengguna_id: { type: String },
+    pengguna_id: { type: String, required: true },
     nama_pertandingan: { type: String, required: true },
     deskripsi: { type: String, default: '' },
     maklumat_tambahan: { type: Object },
