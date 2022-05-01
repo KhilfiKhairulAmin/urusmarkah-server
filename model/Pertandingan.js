@@ -8,11 +8,11 @@ const skemaPertandingan = new Schema({
     maklumat_tambahan: { type: Object },
     konfigurasi: {
         cara_pengiraan_markah: { type: String, enum: [
-            'Penambahan Tetap', 'Penambahan Dinamik', 'Kriteria', ''
-        ], default: '' },
+            'Penambahan Tetap', 'Penambahan Dinamik', 'Kriteria'
+        ]},
         cara_pemilihan_pemenang: { type: String, enum: [
-            'Pertama Meraih N-Markah', 'Markah Tertinggi', 'Kriteria Terbaik', 'Peserta Terakhir', ''
-        ], default: '' }
+            'Pertama Meraih N-Markah', 'Markah Tertinggi', 'Kriteria Terbaik', 'Peserta Terakhir'
+        ]}
     },
     status: { type: String, enum: [
         'Belum Mula', 'Berlangsung', 'Tamat'

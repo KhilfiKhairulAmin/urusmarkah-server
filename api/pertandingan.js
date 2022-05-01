@@ -11,10 +11,15 @@ const tarikhHariIni = () => {
     return `${tttt}-${bb}-${hh}`;
 }
 
+router.get('/:pertandingan_id', (req, res) => {
+    const { pertandingan_id } = req.params;
+})
+
 router.post('/cipta_pertandingan', (req, res) => {
     try {
         const { nama_pertandingan } = req.body;
 
+        // Memastikan nama pertandingan wujud
         if (!nama_pertandingan) {
             return res.status(400).send({ mesej: 'Perlukan nama pertandingan' });
         }
@@ -47,5 +52,7 @@ router.post('/cipta_pertandingan', (req, res) => {
         return res.status(500).send({ mesej: 'Ralat dalaman server' });
     }
 })
+
+
 
 module.exports = router;
