@@ -13,6 +13,7 @@ const routeAuthentication = require('./api/auth');
 aplikasi.use('/pengesahan', routeAuthentication);
 
 const routePengguna = require('./api/pengguna');
-aplikasi.use('/api/v1/pengguna', routePengguna);
+const pengesahanToken = require("./middleware/pengesahanToken");
+aplikasi.use('/api/v1/pengguna', pengesahanToken, routePengguna);
 
 module.exports = aplikasi;

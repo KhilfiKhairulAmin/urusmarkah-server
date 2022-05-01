@@ -189,7 +189,7 @@ router.get('/token', async (req, res) => {
     }
 });
 
-post.post('/log_keluar', pengesahanToken, async (req, res) => {
+router.post('/log_keluar', pengesahanToken, async (req, res) => {
     const validasi = await Validasi.findOne({ pengguna_id: req.pengguna._id });
 
     if (!validasi) {
