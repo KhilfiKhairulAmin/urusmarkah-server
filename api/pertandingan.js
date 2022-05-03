@@ -1,6 +1,7 @@
 const express = require('express');
 const pengesahanPertandingan = require('../middleware/pengesahanPertandingan');
 const Pertandingan = require('../model/Pertandingan');
+const Peserta = require('../model/Peserta');
 const router = express.Router();
 
 /**
@@ -139,14 +140,16 @@ router.delete('/:pertandingan_id/hapus', pengesahanPertandingan, async (req, res
     }
 
     // Menghapuskan maklumat pertandingan
-    // TODO: Hapuskan maklumat yang berkait dengan pertandingan (peserta &&s markah)
     await pertandingan.deleteOne({ _id: pertandingan._id})
     .catch((err) => {
         console.log(err);
         return res.status(500).end();
-    })
+    });
 
-    res.status(200).send({ mesej: 'Pertandingan telah dihapuskan' });
+    // Menghapuskan maklumat peserta dalam pertandingan
+    const { deletedCount: pesertaDihapuskan } = await Peserta.deleteMany({ pertandingan_id: pertandingan._id });
+
+    res.status(200).send({ mesej: `1 Pertandingan telah dihapuskan. ${pesertaDihapuskan} Peserta telah dihapuskan` });
 });
 
 // Route peserta
