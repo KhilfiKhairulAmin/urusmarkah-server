@@ -96,4 +96,23 @@ router.put('/:pertandingan_id/kemas_kini', pengesahanPertandingan, (req, res) =>
     }
 });
 
+router.delete('/:pertandingan_id/hapus', pengesahanPertandingan, async (req, res) => {
+    const { pertandingan } = req;
+    const { nama_pertandingan: pengesahan } = req.body;
+
+    // Memastikan pengesahan diberi
+    if (!pengesahan) {
+        return res.status(403).send({ mesej: 'Sila berikan nama pertandingan' });
+    }
+
+    // Memastikan pengesahan yang diberi betul
+    if (pengesahan !== pertandingan.nama_pertandingan) {
+        return res.status(403).send({ mesej: 'Pertandingan tidak berjaya dihapuskan' });
+    }
+
+    await pertandingan.deleteOne({ _id: pertandingan._id})
+
+    res.status(200).end()
+})
+
 module.exports = router;
