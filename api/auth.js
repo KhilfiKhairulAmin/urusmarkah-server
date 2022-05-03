@@ -19,7 +19,7 @@ const pengesahanToken = require('../middleware/pengesahanToken');
  * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
  * @returns 
  */
-const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '10m' }) => {
+const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '1h' }) => {
     return jwt.sign(
         payload,
         process.env[secretEnvKey],
@@ -38,8 +38,8 @@ require('../konfig/pangkalan_data').connect();
 router.post('/daftar', async (req, res) => {
     try {
         // Dapatkan nilai input
-        const { emel, nama, kata_laluan } = req.body;
-        
+        const { emel , nama, kata_laluan } = req.body;
+
         // Memastikan nilai tidak kosong
         if (!(emel && nama && kata_laluan)) {
             return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda'});
