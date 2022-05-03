@@ -27,6 +27,7 @@ router.post('/cipta', (req, res) => {
     
         const { deskripsi, maklumat_tambahan, konfigurasi } = req.body;
 
+        // Mencipta pertandingan baharu
         const pertandingan = new Pertandingan({
             pengguna_id: req.pengguna._id,
             nama_pertandingan,
@@ -38,6 +39,7 @@ router.post('/cipta', (req, res) => {
             }
         });
         
+        // Memastikan maklumat yang dimasukkan sesuai dengan skema pertandingan
         const error = pertandingan.validateSync();
 
         if (error) {
@@ -45,6 +47,7 @@ router.post('/cipta', (req, res) => {
             return res.status(400).send({ mesej: 'Sila periksa semula maklumat yang diberi' });
         }
 
+        // Menyimpan maklumat pertandingan dalam pangkalan data
         pertandingan.save();
     
         res.status(201).send(pertandingan);
@@ -58,6 +61,7 @@ router.get('/:pertandingan_id', pengesahanPertandingan, (req, res) => {
     try {
         const { pertandingan } = req;
 
+        // Mengembalikan pertandingan
         res.status(200).send(pertandingan);
     } catch (err) {
         console.log(err);
@@ -70,23 +74,29 @@ router.put('/:pertandingan_id/kemas_kini', pengesahanPertandingan, (req, res) =>
         const { pertandingan } = req;
         const { nama_pertandingan } = req.body;
     
+        // Memastikan nama pertandingan tidak kosong
         if (!nama_pertandingan) {
             return res.status(400).send({ mesej: 'Sila berikan nama pertandingan'});
         }
     
         const { deskripsi, maklumat_tambahan, konfigurasi } = req.body;
     
+        // Mengemaskini nama pertandingan (dengan cara overwrite)
         pertandingan.nama_pertandingan = nama_pertandingan;
-        pertandingan.deskripsi = deskripsi ? deskripsi : pertandingan.deskripsi;
-        pertandingan.maklumat_tambahan = maklumat_tambahan ? maklumat_tambahan : pertandingan.maklumat_tambahan;
-        pertandingan.konfigurasi = konfigurasi ? konfigurasi : pertandingan.konfigurasi;
+
+        // Mengemaskini maklumat lain pertandingan
+        pertandingan.deskripsi = deskripsi ?? pertandingan.deskripsi;
+        pertandingan.maklumat_tambahan = maklumat_tambahan ?? pertandingan.maklumat_tambahan;
+        pertandingan.konfigurasi = konfigurasi ?? pertandingan.konfigurasi;
     
+        // Memastikan maklumat yang dikemaskini sesuai dengan skema pertandigan
         const error = pertandingan.validateSync();
     
         if (error) {
             return res.status(400).send({ mesej: 'Sila periksa semula maklumat yang diberi' });
         }
     
+        // Menyimpan maklumat pertandingan dalam pangkalan data
         pertandingan.save();
     
         res.status(200).send({ mesej: 'Kemaskini berjaya' });
@@ -101,6 +111,7 @@ router.delete('/:pertandingan_id/hapus', pengesahanPertandingan, async (req, res
     const { nama_pertandingan: pengesahan } = req.body;
 
     // Memastikan pengesahan diberi
+    // Pengesahan ialah nama pertandingan yang hendak dihapuskan
     if (!pengesahan) {
         return res.status(403).send({ mesej: 'Sila berikan nama pertandingan' });
     }
@@ -110,9 +121,19 @@ router.delete('/:pertandingan_id/hapus', pengesahanPertandingan, async (req, res
         return res.status(403).send({ mesej: 'Pertandingan tidak berjaya dihapuskan' });
     }
 
+    // Menghapuskan maklumat pertandingan
+    // TODO: Hapuskan maklumat yang berkait dengan pertandingan (peserta &&s markah)
     await pertandingan.deleteOne({ _id: pertandingan._id})
+    .catch((err) => {
+        console.log(err);
+        return res.status(500).end();
+    })
 
     res.status(200).end()
 })
+
+// Route peserta
+const routePeserta = require('./peserta');
+router.use('/:pertandingan_id/peserta', pengesahanPertandingan, routePeserta);
 
 module.exports = router;
