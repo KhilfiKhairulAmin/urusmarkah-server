@@ -157,7 +157,7 @@ router.get('/token', async (req, res) => {
             validasi.refresh_token = [];
             validasi.save();
 
-            return res.status(403).send({ mesej: 'Refresh token tidak sah. Redirecting ke laman log masuk...'});
+            return res.status(403).send({ mesej: 'Refresh token luput. Redirecting ke laman log masuk...'});
         }
 
         // Memastikan refresh token merupakan refresh token yang terkini
@@ -171,7 +171,7 @@ router.get('/token', async (req, res) => {
         }
 
         // Pengguna yang sah
-        const muatan = { _id: validasi._id };
+        const muatan = { _id: validasi.pengguna_id };
 
         // Menajana token dan refresh token baharu
         const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' });

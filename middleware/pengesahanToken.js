@@ -5,6 +5,11 @@ const config = process.env;
 const pengesahanToken = (req, res, next) => {
     // Dapatkan header request
     const authorization = req.headers['authorization'];
+
+    if (!authorization) {
+        return res.status(400).send({ mesej: 'Memerlukan token' });
+    }
+
     const bearer = authorization.split(' ');
         
     // Dapatkan token
