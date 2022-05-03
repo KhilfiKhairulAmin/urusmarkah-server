@@ -57,14 +57,31 @@ router.post('/cipta', (req, res) => {
     }
 });
 
+router.get('/', async (req, res) => {
+    try {
+        const { pengguna } = req;
+
+        const pertandingan = await Pertandingan.find({ pengguna_id: pengguna._id }, 'nama_pertandingan deskripsi status metadata');
+    
+        res.status(200).send(pertandingan);
+
+    } catch (err) {
+        console.log(err);
+
+        res.status(500).end();
+    }
+});
+
 router.get('/:pertandingan_id', pengesahanPertandingan, (req, res) => {
     try {
         const { pertandingan } = req;
 
         // Mengembalikan pertandingan
         res.status(200).send(pertandingan);
+
     } catch (err) {
         console.log(err);
+
         res.status(500).end();
     }
 });
@@ -129,8 +146,8 @@ router.delete('/:pertandingan_id/hapus', pengesahanPertandingan, async (req, res
         return res.status(500).end();
     })
 
-    res.status(200).end()
-})
+    res.status(200).send({ mesej: 'Pertandingan telah dihapuskan' });
+});
 
 // Route peserta
 const routePeserta = require('./peserta');
