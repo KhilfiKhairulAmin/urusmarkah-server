@@ -8,12 +8,6 @@ const bcrypt = require('bcryptjs');
 // Model data pengguna
 const Pengguna = require('../model/Pengguna');
 
-// Mengendalikan kesahan dan kebenaran (authentication and authorization) pengguna
-const pengesahan = require('../middleware/pengesahanToken')
-
-// Import fungsi-fungsi kemudahan
-const deleteUndefinedProps = require('../util/deleteUndefinedProps');
-
 // Membuat hubungan dengan pangkalan data
 require('../konfig/pangkalan_data').connect(); 
 
@@ -66,7 +60,7 @@ router.put('/kemas_kini', async (req, res) => {
         if (kata_laluan_baharu) {
 
             // Memastikan kesahan kata laluan lama
-            if (!(await bcrypt.compare(kata_laluan_lama ? kata_laluan_lama : '', pengguna.kata_laluan))) {
+            if (!(await bcrypt.compare(kata_laluan_lama ?? '', pengguna.kata_laluan))) {
                 return res.status(400).send({ mesej: 'Kata laluan salah' });
             }
 
