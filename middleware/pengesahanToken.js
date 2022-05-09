@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-
 const config = process.env;
 
 const pengesahanToken = (req, res, next) => {
@@ -7,7 +6,7 @@ const pengesahanToken = (req, res, next) => {
     const authorization = req.headers['authorization'];
 
     if (!authorization) {
-        return res.status(400).send({ mesej: 'Memerlukan token' });
+        return res.status(400).send({ mesej: 'Memerlukan header authorization' });
     }
 
     const bearer = authorization.split(' ');
@@ -17,6 +16,7 @@ const pengesahanToken = (req, res, next) => {
 
     // Memastikan token wujud
     if(!token) {
+        res.header('WWW-Authenticate', 'Bearer refresh-token')
         return res.status(400).send({ mesej: 'Token diperlukan'});
     }
 
@@ -30,7 +30,7 @@ const pengesahanToken = (req, res, next) => {
     } catch (err) {
         // Token tidak sah
         console.log(err);
-        return res.status(403).send({ mesej: 'Token tidak sah'});
+        return res.status(401).send({ mesej: 'Token tidak sah'});
     }
     return next();
 }

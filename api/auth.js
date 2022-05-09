@@ -19,7 +19,7 @@ const pengesahanToken = require('../middleware/pengesahanToken');
  * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
  * @returns 
  */
-const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '1h' }) => {
+const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '5s' }) => {
     return jwt.sign(
         payload,
         process.env[secretEnvKey],
@@ -112,7 +112,7 @@ router.post('/log_masuk', async (req, res) => {
             const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' });
 
             // Mencipta refresh token baharu
-            const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
+            const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY', expiresIn: '1m' });
 
             // Memasukkan refresh token baharu
             const validasi = await Validasi.findOne({ pengguna_id: pengguna._id });
@@ -175,7 +175,7 @@ router.get('/token', async (req, res) => {
 
         // Menajana token dan refresh token baharu
         const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' });
-        const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
+        const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY', expiresIn: '1m' });
 
         // Memasukkan refresh token terkini ke dalam pengguna
         validasi.refresh_token.unshift(refreshToken);

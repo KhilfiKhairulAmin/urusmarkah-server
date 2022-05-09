@@ -1,7 +1,6 @@
 const Pertandingan = require("../model/Pertandingan");
 const pengesahanToken = require("./pengesahanToken");
 
-
 const pengesahanPertandingan = async (req, res, next) => {
     try {
         const { _id } = req.pengguna;
@@ -21,7 +20,7 @@ const pengesahanPertandingan = async (req, res, next) => {
     
         // Memastikan pertandingan adalah milik pengguna
         if (_id !== pertandingan.pengguna_id) {
-            return res.status(403).send({ mesej: 'Anda tidak dibenarkan mengelola pertandingan ini' });
+            return res.status(401).send({ mesej: 'Anda tidak dibenarkan mengelola pertandingan ini' });
         }
     
         // Mengumpukkan maklumat pertandingan
