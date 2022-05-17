@@ -1,15 +1,26 @@
-// Mengendalikan HTTP request
+// Router
 const express = require('express');
 const router = express.Router();
+const routerPengesahan = require('./pengesahan');
 
-// Menyediakan algoritma penyulitan
+// Hubungan DB
+require('../konfig/pangkalan_data').connect(); 
+
+// Perisian tengah
+const pengesahanToken = require('../middleware/pengesahanToken');
+
+// Penyulitan
 const bcrypt = require('bcryptjs');
 
-// Model data pengguna
+// Model data
 const Pengguna = require('../model/Pengguna');
 
-// Membuat hubungan dengan pangkalan data
-require('../konfig/pangkalan_data').connect(); 
+
+/*  Route V&V (Verification & Validation)
+*/
+router.use('/', routerPengesahan);
+
+router.use(pengesahanToken);
 
 /*  GET semua pelanggan
 
@@ -86,6 +97,20 @@ router.put('/kemas_kini', async (req, res) => {
     } catch (err) {
         console.log(err);
     }
+});
+
+router.post('/log_keluar', async (req, res) => {
+    const validasi = await Validasi.findOne({ pengguna_id: req.pengguna._id });
+
+    if (!validasi) {
+        return res.status(403).send({ mesej: 'Pengguna tidak wujud' })
+    }
+
+    validasi.refresh_token = [];
+
+    validasi.save();
+
+    res.status(200).send({ mesej: 'Log keluar berjaya' });
 });
 
 // Mengeksport router untuk digunakan oleh aplikasi
