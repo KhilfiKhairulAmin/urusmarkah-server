@@ -11,7 +11,6 @@ const jwt = require('jsonwebtoken');
 // Model data pengguna
 const Pengguna = require('../model/Pengguna');
 const Validasi = require('../model/Validasi');
-const pengesahanToken = require('../middleware/pengesahanToken');
 
 /**
  * Fungsi untuk menjana JWT Token
@@ -19,7 +18,7 @@ const pengesahanToken = require('../middleware/pengesahanToken');
  * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
  * @returns Token JWT
  */
-const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '5s' }) => {
+const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '1h' }) => {
     return jwt.sign(
         payload,
         process.env[secretEnvKey],
@@ -28,9 +27,6 @@ const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '5s' }) => {
         }
     )
 }
-
-// Membuat hubungan dengan pangkalan data
-require('../konfig/pangkalan_data').connect();
 
 /* POST cipta akaun pelanggan
 
@@ -187,20 +183,6 @@ router.get('/refresh_token', async (req, res) => {
         console.log(err);
         return res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
-});
-
-router.post('/log_keluar', pengesahanToken, async (req, res) => {
-    const validasi = await Validasi.findOne({ pengguna_id: req.pengguna._id });
-
-    if (!validasi) {
-        return res.status(403).send({ mesej: 'Pengguna tidak wujud' })
-    }
-
-    validasi.refresh_token = [];
-
-    validasi.save();
-
-    res.status(200).send({ mesej: 'Log keluar berjaya' });
 });
 
 // Mengeksport router untuk digunakan oleh aplikasi
