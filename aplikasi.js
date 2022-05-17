@@ -9,9 +9,6 @@ aplikasi.use(cors(), express.json());
 const routeIndex = require('./api/index');
 aplikasi.use('/', routeIndex);
 
-const routeAuthentication = require('./api/auth');
-aplikasi.use('/pengesahan', routeAuthentication);
-
 const routePengguna = require('./api/pengguna');
 const pengesahanToken = require("./middleware/pengesahanToken");
 aplikasi.use('/api/v1/pengguna', pengesahanToken, routePengguna);
