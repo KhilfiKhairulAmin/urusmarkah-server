@@ -11,7 +11,7 @@ aplikasi.use('/', routeIndex);
 
 const routePengguna = require('./api/pengguna');
 const pengesahanToken = require("./middleware/pengesahanToken");
-aplikasi.use('/api/v1/pengguna', pengesahanToken, routePengguna);
+aplikasi.use('/api/v1/pengguna', routePengguna);
 
 const routePertandingan = require('./api/pertandingan');
 aplikasi.use('/api/v1/pertandingan', pengesahanToken, routePertandingan);
