@@ -16,6 +16,62 @@ const bcrypt = require('bcryptjs');
 const Pengguna = require('../model/Pengguna');
 
 
+const Validasi = require('../model/Validasi');
+/* POST cipta akaun pelanggan
+
+*/
+router.post('/daftar', async (req, res) => {
+    try {
+        // Dapatkan nilai input
+        const { emel , nama, kata_laluan } = req.body;
+
+        // Memastikan nilai tidak kosong
+        if (!(emel && nama && kata_laluan)) {
+            return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda'});
+        }
+
+        // Memastikan emel belum diambil oleh pengguna lain
+        const penggunaLama = await Pengguna.findOne({ emel });
+
+        if (penggunaLama) {
+            return res.status(409).send({ mesej: 'Emel sudah digunakan'})
+        }
+
+        // Menyulitkan kata laluan pengguna supaya tidak boleh dibaca
+        const kataLaluanDisulit = await bcrypt.hash(kata_laluan, 10);
+
+        // Mencipta akaun Pengguna
+        const pengguna = new Pengguna ({
+            emel,
+            nama,
+            kata_laluan: kataLaluanDisulit
+        });
+
+        //const muatan = { _id: pengguna._id };
+
+        // Mencipta token dan refresh token baharu
+        // const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' })
+        // const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' })
+
+        // Mencipta validasi
+        const validasi = new Validasi ({
+            pengguna_id: pengguna._id
+        });
+
+        // Menyimpan maklumat dalam pangkalan data
+        pengguna.save();
+        validasi.save();
+        
+        // // Mengembalikan token
+        // res.status(201).json({ token, refreshToken });
+        res.redirect('./log_masuk', 307);
+
+    } catch (err) {
+        // Ralat berlaku
+        console.log(err);
+    }
+});
+
 /*  Route V&V (Verification & Validation)
 */
 router.use('/', routerPengesahan);
