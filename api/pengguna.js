@@ -33,7 +33,7 @@ router.get('/semua', async (req, res) => {
 /*  GET pelanggan
 
 */
-router.get('/maklumat_pengguna', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         // Dapatkan params dan maklumat pengguna
         const { _id } = req.pengguna;
