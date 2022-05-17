@@ -56,7 +56,14 @@ router.post('/log_masuk', async (req, res) => {
             const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY', expiresIn: '1m' });
 
             // Memasukkan refresh token baharu
-            const validasi = await Validasi.findOne({ pengguna_id: pengguna._id });
+            let validasi = await Validasi.findOne({ pengguna_id: pengguna._id });
+
+            if (!validasi) {
+                validasi = new Validasi({
+                    pengguna_id: pengguna._id,
+                })
+            }
+
             validasi.refresh_token.unshift(refreshToken);
             validasi.save();
 
