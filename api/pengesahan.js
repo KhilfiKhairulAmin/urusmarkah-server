@@ -129,7 +129,7 @@ router.post('/log_masuk', async (req, res) => {
     }
 });
 
-router.get('/token', async (req, res) => {
+router.get('/refresh_token', async (req, res) => {
     try {
         // Dapatkan token daripada request headers
         const authorization = req.headers['authorization'];
