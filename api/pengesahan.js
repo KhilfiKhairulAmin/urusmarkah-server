@@ -14,10 +14,10 @@ const Validasi = require('../model/Validasi');
 const pengesahanToken = require('../middleware/pengesahanToken');
 
 /**
- * Fungsi standard bagi aplikasi untuk menjana JWT Token
+ * Fungsi untuk menjana JWT Token
  * @param {string | object | Buffer} payload Data yang mahu disimpan dalam token
  * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
- * @returns 
+ * @returns Token JWT
  */
 const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '5s' }) => {
     return jwt.sign(
@@ -30,7 +30,7 @@ const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '5s' }) => {
 }
 
 // Membuat hubungan dengan pangkalan data
-require('../konfig/pangkalan_data').connect(); 
+require('../konfig/pangkalan_data').connect();
 
 /* POST cipta akaun pelanggan
 
@@ -78,7 +78,7 @@ router.post('/daftar', async (req, res) => {
         pengguna.save();
         validasi.save();
 
-        // Mengembalikan maklumat akaun dan token
+        // Mengembalikan token
         res.status(201).json({ token, refreshToken });
 
     } catch (err) {
