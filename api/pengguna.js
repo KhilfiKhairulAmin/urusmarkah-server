@@ -54,13 +54,12 @@ router.post('/daftar', async (req, res) => {
         // const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' })
 
         // Mencipta validasi
-        const validasi = new Validasi ({
-            pengguna_id: pengguna._id
-        });
+        // const validasi = new Validasi ({
+        //     pengguna_id: pengguna._id
+        // });
 
         // Menyimpan maklumat dalam pangkalan data
         pengguna.save();
-        validasi.save();
         
         // // Mengembalikan token
         // res.status(201).json({ token, refreshToken });
