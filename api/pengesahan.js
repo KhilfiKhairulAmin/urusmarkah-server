@@ -49,21 +49,23 @@ router.post('/log_masuk', async (req, res) => {
 
             const muatan = { _id: pengguna._id }
 
-            // Membuat token JWT baharu
+            // Membuat token baharu
             const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' });
 
-            // Mencipta refresh token baharu
+            // Membuat refresh token baharu
             const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY', expiresIn: '1m' });
 
-            // Memasukkan refresh token baharu
+            // Mendapatkan validasi dengan id pengguna yang diberi
             let validasi = await Validasi.findOne({ pengguna_id: pengguna._id });
 
+            // Mencipta data validasi jika belum wujud
             if (!validasi) {
                 validasi = new Validasi({
                     pengguna_id: pengguna._id,
                 })
             }
 
+            // Memasukkan refresh token baharu
             validasi.refresh_token.unshift(refreshToken);
             validasi.save();
 
