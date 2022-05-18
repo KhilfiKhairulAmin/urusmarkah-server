@@ -147,9 +147,9 @@ router.delete('/:pertandingan_id/hapus', pengesahanPertandingan, async (req, res
     });
 
     // Menghapuskan maklumat peserta dalam pertandingan
-    const { deletedCount: pesertaDihapuskan } = await Peserta.deleteMany({ pertandingan_id: pertandingan._id });
+    const { deletedCount: bilPesertaHapus } = await Peserta.deleteMany({ pertandingan_id: pertandingan._id });
 
-    res.status(200).send({ mesej: `1 Pertandingan telah dihapuskan. ${pesertaDihapuskan} Peserta telah dihapuskan` });
+    res.status(200).send({ mesej: `1 Pertandingan telah dihapuskan. ${bilPesertaHapus} Peserta telah dihapuskan` });
 });
 
 // Route peserta
