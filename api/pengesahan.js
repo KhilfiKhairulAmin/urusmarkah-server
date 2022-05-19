@@ -96,7 +96,17 @@ router.get('/refresh_token', async (req, res) => {
 
         // Memastikan ada pengguna yang memegang refresh token
         if(!validasi) {
-            return res.status(403).send({ mesej: 'Refresh token tidak wujud. Redirecting ke laman log masuk...'});
+            return res.status(403).send({ mesej: 'Refresh token tidak dikenali'});
+        }
+
+        // Memastikan refresh token merupakan refresh token yang terkini
+        if (refreshTokenDiberi !== validasi.refresh_token[0]) {
+            // Jika refresh token merupakan refresh token lama
+            // Menghapuskan semua refresh token
+            validasi.refresh_token = [];
+            validasi.save();
+
+            return res.status(403).send({ mesej: 'Refresh token lama diberi. Anda perlu log masuk semula untuk mengesahkan identiti anda'});
         }
 
         try {
@@ -107,17 +117,7 @@ router.get('/refresh_token', async (req, res) => {
             validasi.refresh_token = [];
             validasi.save();
 
-            return res.status(403).send({ mesej: 'Refresh token luput. Redirecting ke laman log masuk...'});
-        }
-
-        // Memastikan refresh token merupakan refresh token yang terkini
-        if (refreshTokenDiberi !== validasi.refresh_token[0]) {
-            // Jika refresh token merupakan refresh token lama
-            // Menghapuskan semua refresh token
-            validasi.refresh_token = [];
-            validasi.save();
-
-            return res.status(403).send({ mesej: 'Refresh token tidak sah. Redirecting ke laman log masuk...'});
+            return res.status(403).send({ mesej: 'Refresh token luput. Anda perlu log masuk semula untuk mendapatkan akses'});
         }
 
         // Pengguna yang sah
