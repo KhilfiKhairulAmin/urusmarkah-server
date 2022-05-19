@@ -154,13 +154,18 @@ router.put('/kemas_kini', async (req, res) => {
     }
 });
 
+/* POST log keluar
+*/
 router.post('/log_keluar', async (req, res) => {
+
+    // Mencari validasi pengguna
     const validasi = await Validasi.findOne({ pengguna_id: req.pengguna._id });
 
     if (!validasi) {
         return res.status(403).send({ mesej: 'Pengguna tidak wujud' })
     }
 
+    // Menghapuskan semua akses refresh token
     validasi.refresh_token = [];
 
     validasi.save();
