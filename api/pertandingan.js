@@ -1,5 +1,5 @@
 const express = require('express');
-const pengesahanPertandingan = require('../middleware/pengesahanPertandingan');
+const dapatkanPertandingan = require('../middleware/dapatkanPertandingan');
 const Pertandingan = require('../model/Pertandingan');
 const Peserta = require('../model/Peserta');
 const router = express.Router();
@@ -73,7 +73,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.get('/:pertandingan_id', pengesahanPertandingan, (req, res) => {
+router.get('/:pertandingan_id', dapatkanPertandingan, (req, res) => {
     try {
         const { pertandingan } = req;
 
@@ -87,7 +87,7 @@ router.get('/:pertandingan_id', pengesahanPertandingan, (req, res) => {
     }
 });
 
-router.put('/:pertandingan_id/kemas_kini', pengesahanPertandingan, (req, res) => {
+router.put('/:pertandingan_id/kemas_kini', dapatkanPertandingan, (req, res) => {
     try {
         const { pertandingan } = req;
         const { nama_pertandingan } = req.body;
@@ -124,7 +124,7 @@ router.put('/:pertandingan_id/kemas_kini', pengesahanPertandingan, (req, res) =>
     }
 });
 
-router.delete('/:pertandingan_id/hapus', pengesahanPertandingan, async (req, res) => {
+router.delete('/:pertandingan_id/hapus', dapatkanPertandingan, async (req, res) => {
     const { pertandingan } = req;
     const { nama_pertandingan: pengesahan } = req.body;
 
@@ -154,6 +154,6 @@ router.delete('/:pertandingan_id/hapus', pengesahanPertandingan, async (req, res
 
 // Route peserta
 const routePeserta = require('./peserta');
-router.use('/:pertandingan_id/peserta', pengesahanPertandingan, routePeserta);
+router.use('/:pertandingan_id/peserta', dapatkanPertandingan, routePeserta);
 
 module.exports = router;
