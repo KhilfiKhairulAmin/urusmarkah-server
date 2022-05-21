@@ -14,9 +14,9 @@ const skemaPertandingan = new Schema({
             'Pertama Meraih N-Markah', 'Markah Tertinggi', 'Kriteria Terbaik', 'Peserta Terakhir'
         ]}
     },
-    status: { type: String, enum: [
-        'Belum Mula', 'Berlangsung', 'Tamat'
-    ], default: 'Belum Mula' },
+    status: { type: Number, enum: [
+        0, 1, 2
+    ], default: 0 },
     metadata: { tarikh_dibuat: Date, tarikh_berlangsung: Date, tarikh_tamat: Date }
 });
 
