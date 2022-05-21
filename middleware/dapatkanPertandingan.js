@@ -1,13 +1,9 @@
 const Pertandingan = require("../model/Pertandingan");
 
-const pengesahanPertandingan = async (req, res, next) => {
+const dapatkanPertandingan = async (req, res, next) => {
     try {
         const { _id: pengguna_id } = req.pengguna;
         const { pertandingan_id: _id } = req.params;
-
-        if (!_id) {
-            return res.status(500).end();
-        }
 
         // Mencari pertandingan dengan id yang diberi
         const pertandingan = await Pertandingan.findOne({ _id, pengguna_id });
@@ -27,4 +23,4 @@ const pengesahanPertandingan = async (req, res, next) => {
     }
 };
 
-module.exports = pengesahanPertandingan;
+module.exports = dapatkanPertandingan;
