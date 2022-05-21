@@ -6,7 +6,7 @@ const dapatkanPertandingan = async (req, res, next) => {
         const { pertandingan_id: _id } = req.params;
 
         // Mencari pertandingan dengan id yang diberi
-        const pertandingan = await Pertandingan.findOne({ _id, pengguna_id });
+        const pertandingan = await Pertandingan.findOne({ _id, pengguna_id }, 'nama_pertandingan deskripsi maklumat_tambahan konfigurasi status metadata');
 
         // Memastikan pertaningan wujud
         if (!pertandingan) {
