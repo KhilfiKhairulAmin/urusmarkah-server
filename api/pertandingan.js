@@ -51,7 +51,7 @@ router.post('/cipta', (req, res) => {
         // Menyimpan maklumat pertandingan dalam pangkalan data
         pertandingan.save();
     
-        res.status(201).send(pertandingan);
+        res.redirect(`./${pertandingan._id}`, 302)
     } catch (err) {
         console.log(err);
         return res.status(500).send({ mesej: 'Ralat dalaman server' });
