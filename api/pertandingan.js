@@ -105,7 +105,8 @@ router.put('/:pertandingan_id/kemas_kini', dapatkanPertandingan, (req, res) => {
         // Mengemaskini maklumat lain pertandingan
         pertandingan.deskripsi = deskripsi ?? pertandingan.deskripsi;
         pertandingan.maklumat_tambahan = maklumat_tambahan ?? pertandingan.maklumat_tambahan;
-        pertandingan.konfigurasi = konfigurasi ?? pertandingan.konfigurasi;
+        pertandingan.konfigurasi.cara_pengiraan_markah = konfigurasi.cara_pengiraan_markah ?? pertandingan.konfigurasi.cara_pengiraan_markah;
+        pertandingan.konfigurasi.cara_pemilihan_pemenang = konfigurasi.cara_pemilihan_pemenang ?? pertandingan.konfigurasi.cara_pemilihan_pemenang;
     
         // Memastikan maklumat yang dikemaskini sesuai dengan skema pertandigan
         const error = pertandingan.validateSync();
