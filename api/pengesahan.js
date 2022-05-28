@@ -139,5 +139,9 @@ router.get('/refresh_token', async (req, res) => {
     }
 });
 
+router.get('/validasi', (req, res) => {
+    res.status(200).send({ sah: true });
+});
+
 // Mengeksport router untuk digunakan oleh aplikasi
 module.exports = router;
