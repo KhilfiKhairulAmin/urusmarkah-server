@@ -55,6 +55,7 @@ router.post('/daftar', async (req, res) => {
     } catch (err) {
         // Ralat berlaku
         console.log(err);
+        res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
 });
 
@@ -87,6 +88,7 @@ router.get('/', async (req, res) => {
     } catch (err) {
         // Ralat berlaku
         console.log(err);
+        res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
 });
 
@@ -138,6 +140,7 @@ router.put('/kemas_kini', async (req, res) => {
         res.status(400).send(pengguna)
     } catch (err) {
         console.log(err);
+        res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
 });
 

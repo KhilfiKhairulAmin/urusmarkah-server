@@ -76,6 +76,7 @@ router.post('/log_masuk', async (req, res) => {
         res.status(400).send({ mesej: 'Emel atau kata laluan salah'});
     } catch (err) {
         console.log(err)
+        res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
 });
 
