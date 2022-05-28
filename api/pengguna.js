@@ -63,7 +63,7 @@ router.post('/daftar', async (req, res) => {
         
         // // Mengembalikan token
         // res.status(201).json({ token, refreshToken });
-        res.redirect('./log_masuk', 307);
+        res.redirect(307, './log_masuk');
 
     } catch (err) {
         // Ralat berlaku
