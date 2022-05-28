@@ -85,7 +85,7 @@ router.get('/refresh_token', async (req, res) => {
         const authorization = req.headers['authorization'];
         const bearer = authorization.split(' ');
         const refreshTokenDiberi = bearer[1];
-
+        
         // Memastikan refresh token wujud
         if(!refreshTokenDiberi) {
             return res.status(400).send({ mesej: 'Refresh token diperlukan'});
@@ -96,7 +96,7 @@ router.get('/refresh_token', async (req, res) => {
 
         // Memastikan ada pengguna yang memegang refresh token
         if(!validasi) {
-            return res.status(403).send({ mesej: 'Refresh token tidak dikenali'});
+            return res.status(400).send({ mesej: 'Refresh token tidak dikenali'});
         }
 
         // Memastikan refresh token merupakan refresh token yang terkini
@@ -137,10 +137,6 @@ router.get('/refresh_token', async (req, res) => {
         console.log(err);
         return res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
-});
-
-router.get('/validasi', (req, res) => {
-    res.status(200).send({ sah: true });
 });
 
 // Mengeksport router untuk digunakan oleh aplikasi

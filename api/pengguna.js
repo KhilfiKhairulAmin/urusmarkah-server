@@ -154,6 +154,10 @@ router.put('/kemas_kini', async (req, res) => {
     }
 });
 
+router.get('/validasi', (req, res) => {
+    res.status(200).send({ sah: true });
+});
+
 /* POST log keluar
 */
 router.post('/log_keluar', async (req, res) => {
