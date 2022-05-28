@@ -66,7 +66,7 @@ router.post('/log_masuk', async (req, res) => {
             }
 
             // Memasukkan refresh token baharu
-            validasi.refresh_token.unshift(refreshToken);
+            validasi.refresh_token = [refreshToken];
             validasi.save();
 
             // Menghantar response
