@@ -47,23 +47,10 @@ router.post('/daftar', async (req, res) => {
             kata_laluan: kataLaluanDisulit
         });
 
-        //const muatan = { _id: pengguna._id };
-
-        // Mencipta token dan refresh token baharu
-        // const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' })
-        // const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' })
-
-        // Mencipta validasi
-        // const validasi = new Validasi ({
-        //     pengguna_id: pengguna._id
-        // });
-
         // Menyimpan maklumat dalam pangkalan data
         pengguna.save();
-        
-        // // Mengembalikan token
-        // res.status(201).json({ token, refreshToken });
-        res.redirect(307, './log_masuk');
+
+        res.redirect('./log_masuk', 307);
 
     } catch (err) {
         // Ralat berlaku
