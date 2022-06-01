@@ -14,12 +14,19 @@ const skemaPertandingan = new Schema({
     deskripsi: { type: String },
     pengiraan: skemaPengiraan,
     pemilihan: skemaPemilihan,
-    tarikh: {
+    tarikhMasa: {
         cipta: Date,
         laksana: Date,
         tamat: Date
     },
-    bilPusingan: Number
+    bilPusingan: Number,
+    bilPeserta: Number,
+    statistik: {
+        jumlah: Number,
+        purata: Number,
+        julat: Number,
+        standardDeviation: Number
+    }
 });
 
 module.exports = model('pertandingan', skemaPertandingan, 'pertandingan');
