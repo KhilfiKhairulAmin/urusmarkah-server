@@ -1,8 +1,10 @@
 const { Schema, model } = require('mongoose');
 
 const skemaPeserta = new Schema({
-    pertandingan_id: { type: String, required: true },
-    nama_peserta: { type: String, required: true },
+    emel: { type: String, required: true },
+    namaPenuh: { type: String, required: true },
+    namaAkaun: { type: String, required: true },
+    tarikhMasaDaftar: Date
 });
 
 module.exports = model('peserta', skemaPeserta, 'peserta');
