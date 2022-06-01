@@ -9,7 +9,7 @@ const skemaPemilihan = new Schema({
 })
 
 const skemaPertandingan = new Schema({
-    idPengguna: { type: String, required: true },
+    idPengelola: { type: String, required: true },
     namaPertandingan: { type: String, required: true },
     deskripsi: { type: String },
     pengiraan: skemaPengiraan,
