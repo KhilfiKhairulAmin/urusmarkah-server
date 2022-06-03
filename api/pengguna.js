@@ -13,7 +13,7 @@ const pengesahanToken = require('../middleware/pengesahanToken');
 const bcrypt = require('bcryptjs');
 
 // Model data
-const Pengguna = require('../model/Pengguna');
+const Pengguna = require('../model/Pengelola');
 
 
 const Validasi = require('../model/Validasi');

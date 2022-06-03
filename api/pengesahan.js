@@ -9,7 +9,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Model data pengguna
-const Pengguna = require('../model/Pengguna');
+const Pengguna = require('../model/Pengelola');
 const Validasi = require('../model/Validasi');
 
 /**
