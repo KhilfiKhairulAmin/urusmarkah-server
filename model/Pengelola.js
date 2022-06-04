@@ -11,4 +11,4 @@ const skemaPengelola = new Schema({
     }
 });
 
-module.exports = model('pengguna', skemaPengelola, 'pengguna');
+module.exports = model('pengelola', skemaPengelola, 'pengelola');

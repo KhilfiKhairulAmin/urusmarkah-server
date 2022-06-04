@@ -1,7 +1,7 @@
 const { Schema, model } = require('mongoose');
 
 const skemaValidasi = new Schema ({
-    idPengelola: { type: String, unique: true, required: true },
+    idPengelola: { type: Schema.Types.ObjectId, required: true, ref: 'pengelola' },
     katalaluan: { type: String, required: true },
     refreshToken: { type: [String], default: [] }
 });
