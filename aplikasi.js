@@ -9,9 +9,9 @@ aplikasi.use(cors(), express.json());
 const routeIndex = require('./api/index');
 aplikasi.use('/', routeIndex);
 
-const routePengguna = require('./api/pengguna');
+const routePengelola = require('./api/pengelola');
 const pengesahanToken = require("./middleware/pengesahanToken");
-aplikasi.use('/api/v1/pengguna', routePengguna);
+aplikasi.use('/api/v1/pengelola', routePengelola);
 
 const routePertandingan = require('./api/pertandingan');
 aplikasi.use('/api/v1/pertandingan', pengesahanToken, routePertandingan);
