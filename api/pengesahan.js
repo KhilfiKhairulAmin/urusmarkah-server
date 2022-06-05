@@ -12,21 +12,8 @@ const jwt = require('jsonwebtoken');
 const Pengguna = require('../model/Pengelola');
 const Validasi = require('../model/Validasi');
 
-/**
- * Fungsi untuk menjana JWT Token
- * @param {string | object | Buffer} payload Data yang mahu disimpan dalam token
- * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
- * @returns Token JWT
- */
-const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '1h' }) => {
-    return jwt.sign(
-        payload,
-        process.env[secretEnvKey],
-        {
-            expiresIn: expiresIn
-        }
-    )
-}
+// Utility function
+const janaTokenJWT = require('../util/janaTokenJWT');
 
 /* POST log masuk akaun pengguna
 
@@ -34,10 +21,10 @@ const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '1h' }) => {
 router.post('/log_masuk', async (req, res) => {
     try {
         // Dapatkan nilai input
-        const { emel, kata_laluan } = req.body;
+        const { emel, kata_laluan: katalaluan } = req.body;
 
         // Memastikan input tidak kosong
-        if (!(emel && kata_laluan)) {
+        if (!(emel && katalaluan)) {
             return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda' });
         }
 
@@ -45,7 +32,7 @@ router.post('/log_masuk', async (req, res) => {
         const pengguna = await Pengguna.findOne({ emel });
 
         // Memastikan pengguna wujud dan kata laluan betul
-        if (pengguna && (await bcrypt.compare(kata_laluan, pengguna.kata_laluan))) {
+        if (pengguna && (await bcrypt.compare(katalaluan, pengguna.katalaluan))) {
 
             const muatan = { _id: pengguna._id }
 
