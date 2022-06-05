@@ -1,10 +1,9 @@
 const { Schema, model } = require('mongoose');
 
 const skemaPengelola = new Schema({
-    emel: { type: String, unique: true, required: true},
+    emel: { type: String, required: true},
     namaAkaun: { type: String, required: true },
-    namaAwal: { type: String, required: true },
-    namaAkhir: { type: String, required: true },
+    namaPenuh: { type: String, required: true },
     tarikhMasa: {
         daftar: Date,
         logMasukTerakhir: Date
