@@ -11,7 +11,7 @@ module.exports = function janaTokenJWT (payload, { secretEnvKey, expiresIn = '1h
         payload,
         process.env[secretEnvKey],
         {
-            expiresIn: expiresIn
+            expiresIn
         }
     )
 }
