@@ -18,7 +18,6 @@ const Validasi = require('../model/Validasi');
 
 // Utility function
 const janaTokenJWT = require('../util/janaTokenJWT');
-const { default: mongoose } = require('mongoose');
 
 /* POST cipta akaun pelanggan
 
@@ -40,10 +39,14 @@ router.post('/daftar', async (req, res) => {
             return res.status(409).send('Emel sudah digunakan')
         }
 
-        const tarikh = new Date().toLocaleDateString();
+        const tarikh = new Date().toLocaleString();
 
         // Menyulitkan kata laluan pengelola supaya tidak boleh dibaca
         const kataLaluanDisulit = await bcrypt.hash(katalaluan, 10);
+
+        const validasi = new Validasi({
+            katalaluan: kataLaluanDisulit
+        });
 
         // Mencipta akaun pengelola
         const pengelola = new Pengelola ({
@@ -53,35 +56,24 @@ router.post('/daftar', async (req, res) => {
             tarikhMasa: {
                 daftar: tarikh,
                 logMasukTerakhir: tarikh
-            }
+            },
+            validasi: validasi._id
         });
 
-        // Menyimpan maklumat dalam pangkalan data
-        pengelola.save(function (err) {
-            console.log(pengelola._id)
-            if (err) return res.status(500).send("Ralat dalaman server");
+        const muatan = { validasi: validasi._id, pengelola: pengelola._id }
 
-            const validasi = new Validasi({
-                pengelola: pengelola._id,
-                katalaluan: kataLaluanDisulit,
-            });
+        // Membuat token baharu
+        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
 
-            const muatan = { _id: validasi._id }
+        // Membuat refresh token baharu
+        const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
-            // Membuat token baharu
-            const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
+        validasi.refreshToken = [refreshToken]
 
-            // Membuat refresh token baharu
-            const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
+        validasi.save();
+        pengelola.save();
 
-            validasi.refreshToken = [refreshToken]
-
-            validasi.save(function (err) {
-                if (err) throw err
-            });
-
-            res.status(201).send({ token, refreshToken })
-        });
+        res.status(201).send({ token, refreshToken })
 
     } catch (err) {
         // Ralat berlaku
@@ -94,26 +86,19 @@ router.post('/daftar', async (req, res) => {
 */
 router.use('/', routerPengesahan);
 
+/* PROTECTED ROUTEs AHEAD */
 router.use(pengesahanToken);
-
-/*  GET semua pelanggan
-
-*/
-router.get('/semua', async (req, res) => {
-    const koleksi = await Pengelola.find({});
-    res.status(200).send(koleksi);
-});
 
 /*  GET pelanggan
 
 */
 router.get('/', async (req, res) => {
     try {
-        // Dapatkan params dan maklumat pengelola
-        const { _id } = req.pengelola;
+        // Dapatkan id pengelola
+        const { pengelola } = req.muatanToken;
 
         // Mendapatkan keseluruhan maklumat pengelola
-        const maklumatpengelola = await Pengelola.findById(_id);
+        const maklumatpengelola = await Pengelola.findById(pengelola, '-validasi');
 
         return res.status(200).json(maklumatpengelola);
     } catch (err) {
@@ -123,58 +108,45 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.get('/validasi', async (req, res) => {
-    const validasi = await Validasi.findById("629c222dd8e2261b68d97cc9").populate('pengelola')
-
-    res.status(200).send( validasi)
-})
-
-
 /*  PUT (kemas kini) pelanggan
 
 */
 router.put('/kemas_kini', async (req, res) => {
     try {
-        const { _id } = req.pengelola;
+        const { pengelola: _id } = req.muatanToken;
 
         // Mencari pengelola
-        const pengelola = await Pengelola.findById({ _id });
+        const pengelola = await Pengelola.findById(_id, 'namaAkaun namaPenuh').populate('validasi', 'katalaluan');
 
-        // Memastikan pengelola wujud
-        if (!pengelola) {
-            return res.status(403).send({ mesej: 'pengelola tidak wujud' });
-        }
+        const { namaAkaun, namaPenuh, katalaluanLama, katalaluanBaharu } = req.body;
 
-        const { nama, kata_laluan_lama, kata_laluan_baharu } = req.body;
-
+        const { validasi } = pengelola;
         // Jika pengelola ingin mengemaskini KATA LALUAN...
         // Menguji jika parameter kata laluan lama diberi
-        if (kata_laluan_baharu) {
+        if (katalaluanBaharu) {
 
             // Memastikan kesahan kata laluan lama
-            if (!(await bcrypt.compare(kata_laluan_lama ?? '', pengelola.kata_laluan))) {
-                return res.status(400).send({ mesej: 'Kata laluan salah' });
+            if (!(katalaluanLama && await bcrypt.compare(katalaluanLama, validasi.katalaluan))) {
+                return res.status(400).send({ mesej: 'Katalaluan lama tidak benar' });
             }
 
             // Menyulitkan kata laluan
-            const kataLaluanDisulit = await bcrypt.hash(kata_laluan_baharu, 10);
+            const katalaluanDisulit = await bcrypt.hash(katalaluanBaharu, 10);
 
             // Mengemaskini kata laluan pengelola
-            pengelola.kata_laluan = kataLaluanDisulit;
-        }
-
-        // Memastikan nama diberikan
-        if (!nama) {
-            return res.status(400).send({ mesej: 'Nama diperlukan' });
+            validasi.katalaluan = katalaluanDisulit;
+            validasi.save();
         }
 
         // Mengemaskini nama pengelola
-        pengelola.nama = nama;
+        pengelola.namaPenuh = namaPenuh || pengelola.namaPenuh;
+        pengelola.namaAkaun = namaAkaun || pengelola.namaAkaun;
 
         // Menyimpan maklumat dalam pangkalan data
         pengelola.save();
 
-        res.status(400).send(pengelola)
+        res.status(200).send(pengelola);
+
     } catch (err) {
         console.log(err);
         res.status(500).send({ mesej: 'Masalah dalaman server' });
@@ -189,15 +161,13 @@ router.get('/validasi', (req, res) => {
 */
 router.post('/log_keluar', async (req, res) => {
 
-    // Mencari validasi pengelola
-    const validasi = await Validasi.findOne({ pengelola_id: req.pengelola._id });
+    const { validasi: _id } = req.muatanToken;
 
-    if (!validasi) {
-        return res.status(403).send({ mesej: 'pengelola tidak wujud' })
-    }
+    // Mencari validasi pengelola
+    const validasi = await Validasi.findById(_id, 'refreshToken');
 
     // Menghapuskan semua akses refresh token
-    validasi.refresh_token = [];
+    validasi.refreshToken = [];
 
     validasi.save();
 
