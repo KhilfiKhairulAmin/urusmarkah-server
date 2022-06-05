@@ -7,7 +7,8 @@ const skemaPengelola = new Schema({
     tarikhMasa: {
         daftar: Date,
         logMasukTerakhir: Date
-    }
+    },
+    validasi: { type: Schema.Types.ObjectId, ref: 'validasi' }
 });
 
 module.exports = model('pengelola', skemaPengelola, 'pengelola');
