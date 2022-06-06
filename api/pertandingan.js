@@ -1,39 +1,29 @@
 const express = require('express');
 const dapatkanPertandingan = require('../middleware/dapatkanPertandingan');
+const Pengiraan = require('../model/Pengiraan');
 const Pertandingan = require('../model/Pertandingan');
 const Peserta = require('../model/Peserta');
 const router = express.Router();
 
-/**
- * Mengembalikan tarikh dalam format tttt-bb-hh
- * @param {Date} tarikh 
- * @returns {String} tttt-bb-hh
- */
-const formatTarikh = (tarikh) => {
-    const tttt = String(tarikh.getFullYear());
-    const bb = String(tarikh.getMonth() + 1).padStart(2, '0');
-    const hh = String(tarikh.getDate()).padStart(2, '0');
-
-    return `${tttt}-${bb}-${hh}`;
-}
-
 router.post('/cipta', (req, res) => {
     try {
-        const { nama_pertandingan } = req.body;
+        const { namaPertandingan } = req.body;
 
         // Memastikan nama pertandingan wujud
-        if (!nama_pertandingan) {
+        if (!namaPertandingan) {
             return res.status(400).send({ mesej: 'Perlukan nama pertandingan' });
         }
     
-        const { deskripsi, maklumat_tambahan, konfigurasi } = req.body;
+        const { deskripsi, pengiraan: kira, pemilihan: pilih } = req.body;
+        const { pengelola } = req.muatanToken;
+
+        const pengiraan = await Pengiraan.findOne();
 
         // Mencipta pertandingan baharu
         const pertandingan = new Pertandingan({
-            pengguna_id: req.pengguna._id,
-            nama_pertandingan,
+            pengelola,
+            namaPertandingan,
             deskripsi,
-            maklumat_tambahan,
             konfigurasi,
             metadata: {
                 tarikh_dibuat: formatTarikh(new Date())

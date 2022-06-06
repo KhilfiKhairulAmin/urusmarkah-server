@@ -1,11 +1,11 @@
 const { Schema, model } = require('mongoose');
 
 const skemaPertandingan = new Schema({
-    idPengelola: { type: Schema.Types.ObjectId, required: true, ref: 'pengelola' },
-    namaPertandingan: { type: String, required: true },
+    pengelola: { type: Schema.Types.ObjectId, required: true, ref: 'pengelola' },
+    nama: { type: String, required: true },
     deskripsi: { type: String },
-    pengiraan: { type: Schema.Types.ObjectId, ref: 'pengiraan' },
-    pemilihan: { type: Schema.Types.ObjectId, ref: 'pemilihan' },
+    pengiraan: { type: Schema.Types.ObjectId, ref: 'pengiraan', required: true },
+    pemilihan: { type: Schema.Types.ObjectId, ref: 'pemilihan', required: true },
     tarikhMasa: {
         cipta: Date,
         laksana: Date,
