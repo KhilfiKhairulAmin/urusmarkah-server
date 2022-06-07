@@ -9,24 +9,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Model data pengguna
-const Pengguna = require('../model/Pengguna');
+const Pengguna = require('../model/Pengelola');
 const Validasi = require('../model/Validasi');
 
-/**
- * Fungsi untuk menjana JWT Token
- * @param {string | object | Buffer} payload Data yang mahu disimpan dalam token
- * @param {*} option Nama kunci rahsia dalam environment && masa luput JWT
- * @returns Token JWT
- */
-const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '1h' }) => {
-    return jwt.sign(
-        payload,
-        process.env[secretEnvKey],
-        {
-            expiresIn: expiresIn
-        }
-    )
-}
+// Utility function
+const janaTokenJWT = require('../util/janaTokenJWT');
+const Pengelola = require('../model/Pengelola');
 
 /* POST log masuk akaun pengguna
 
@@ -34,39 +22,31 @@ const janaTokenJWT = (payload, { secretEnvKey, expiresIn = '1h' }) => {
 router.post('/log_masuk', async (req, res) => {
     try {
         // Dapatkan nilai input
-        const { emel, kata_laluan } = req.body;
+        const { emel, katalaluan } = req.body;
 
         // Memastikan input tidak kosong
-        if (!(emel && kata_laluan)) {
+        if (!(emel && katalaluan)) {
             return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda' });
         }
 
         // Mencari pengguna
-        const pengguna = await Pengguna.findOne({ emel });
+        const pengelola = await Pengguna.findOne({ emel }, 'validasi').populate('validasi', 'katalaluan');
 
         // Memastikan pengguna wujud dan kata laluan betul
-        if (pengguna && (await bcrypt.compare(kata_laluan, pengguna.kata_laluan))) {
+        if (pengelola && (await bcrypt.compare(katalaluan, pengelola.validasi.katalaluan))) {
 
-            const muatan = { _id: pengguna._id }
+            const { validasi } = pengelola;
+
+            const muatan = { validasi: validasi._id, pengelola: pengelola._id }
 
             // Membuat token baharu
-            const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' });
+            const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
 
             // Membuat refresh token baharu
-            const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY', expiresIn: '1m' });
+            const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY'});
 
-            // Mendapatkan validasi dengan id pengguna yang diberi
-            let validasi = await Validasi.findOne({ pengguna_id: pengguna._id });
-
-            // Mencipta data validasi jika belum wujud
-            if (!validasi) {
-                validasi = new Validasi({
-                    pengguna_id: pengguna._id,
-                })
-            }
-
-            // Memasukkan refresh token baharu
-            validasi.refresh_token.unshift(refreshToken);
+            // const validasi = await Validasi.findById(pengelola.validasi._id, 'refreshToken');
+            validasi.refreshToken = [refreshToken];
             validasi.save();
 
             // Menghantar response
@@ -76,6 +56,7 @@ router.post('/log_masuk', async (req, res) => {
         res.status(400).send({ mesej: 'Emel atau kata laluan salah'});
     } catch (err) {
         console.log(err)
+        res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
 });
 
@@ -92,7 +73,7 @@ router.get('/refresh_token', async (req, res) => {
         }
 
         // Mendapatkan pengguna yang memegang refresh token tersebut
-        const validasi = await Validasi.findOne({ refresh_token: refreshTokenDiberi });
+        const validasi = await Validasi.findOne({ refreshToken: refreshTokenDiberi });
 
         // Memastikan ada pengguna yang memegang refresh token
         if(!validasi) {
@@ -100,35 +81,42 @@ router.get('/refresh_token', async (req, res) => {
         }
 
         // Memastikan refresh token merupakan refresh token yang terkini
-        if (refreshTokenDiberi !== validasi.refresh_token[0]) {
+        if (refreshTokenDiberi !== validasi.refreshToken[0]) {
             // Jika refresh token merupakan refresh token lama
             // Menghapuskan semua refresh token
-            validasi.refresh_token = [];
+            validasi.refreshToken = [];
             validasi.save();
 
-            return res.status(403).send({ mesej: 'Refresh token lama diberi. Anda perlu log masuk semula untuk mengesahkan identiti anda'});
+            return res.status(403).send({ mesej: 'Refresh token luput diberi. Anda perlu log masuk semula untuk mengesahkan identiti anda'});
         }
+
+        let muatanLama;
 
         try {
             // Menguji sama ada refresh token belum luput
-            jwt.verify(refreshTokenDiberi, process.env.REFRESH_TOKEN_KEY);
+            muatanLama = jwt.verify(refreshTokenDiberi, process.env.REFRESH_TOKEN_KEY);
+            console.log(muatanLama)
         } catch (err) {
             // Menghapuskan semua refresh token
-            validasi.refresh_token = [];
+            validasi.refreshToken = [];
             validasi.save();
 
             return res.status(403).send({ mesej: 'Refresh token luput. Anda perlu log masuk semula untuk mendapatkan akses'});
         }
 
-        // Pengguna yang sah
-        const muatan = { _id: validasi.pengguna_id };
+        const { pengelola } = muatanLama;
+        
+        const muatan = {
+            pengelola,
+            validasi: validasi._id
+        }
 
         // Menajana token dan refresh token baharu
-        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY' });
-        const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY', expiresIn: '1m' });
+        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
+        const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
         // Memasukkan refresh token terkini ke dalam pengguna
-        validasi.refresh_token.unshift(refreshToken);
+        validasi.refreshToken.unshift(refreshToken);
         validasi.save();
 
         res.status(201).json({ token, refreshToken })

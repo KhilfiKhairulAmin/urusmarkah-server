@@ -25,7 +25,7 @@ const pengesahanToken = (req, res, next) => {
         const nyahsulit = jwt.verify(token, config.TOKEN_KEY);
 
         // Mengumpukkan nilai token
-        req.pengguna = nyahsulit;
+        req.muatanToken = nyahsulit;
 
     } catch (err) {
         // Token tidak sah
