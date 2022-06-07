@@ -17,7 +17,11 @@ router.post('/cipta', (req, res) => {
         const { deskripsi, pengiraan: kira, pemilihan: pilih } = req.body;
         const { pengelola } = req.muatanToken;
 
-        const pengiraan = await Pengiraan.findOne();
+        const pengiraan = await Pengiraan.findById(kira);
+
+        if (!pengiraan) {
+            return res.status(400).send({ mesej: 'Sila pastikan nombor pengiraan sah'})
+        }
 
         // Mencipta pertandingan baharu
         const pertandingan = new Pertandingan({
