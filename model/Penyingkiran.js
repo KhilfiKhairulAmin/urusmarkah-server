@@ -1,8 +1,8 @@
 const { Schema, model } = require('mongoose');
 
-const skemaPengiraan = new Schema({
+const skemaPenyingkiran = new Schema({
     nama: { type: String, required: true, unique: true },
     noRujukan: { type: Number, required: true }
 });
 
-module.exports = model('pengiraan', skemaPengiraan, 'pengiraan');
+module.exports = model('penyingkiran', skemaPenyingkiran, 'penyingkiran');
