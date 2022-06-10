@@ -10,10 +10,13 @@ const routeIndex = require('./api/index');
 aplikasi.use('/', routeIndex);
 
 const routePengelola = require('./api/pengelola');
-const pengesahanToken = require("./middleware/pengesahanToken");
 aplikasi.use('/api/v1/pengelola', routePengelola);
 
+const routePeserta = require('./api/peserta');
+aplikasi.use('/api/v1/peserta', routePeserta);
+
 const routePertandingan = require('./api/pertandingan');
+const pengesahanToken = require("./middleware/pengesahanToken");
 aplikasi.use('/api/v1/pertandingan', pengesahanToken, routePertandingan);
 
 module.exports = aplikasi;
