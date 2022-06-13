@@ -1,56 +1,76 @@
+const { hash, compare } = require('bcryptjs');
 const express = require('express');
 const pengesahanPeserta = require('../middleware/pengesahanPeserta');
 const Peserta = require('../model/Peserta');
+const Session = require('../model/Session');
 const router = express.Router();
 
 router.post('/daftar', async (req, res) => {
     try {
-        const { peserta: pesertaBaharu } = req.body;
+        const { emel, namaAkaun, katalaluan, namaPenuh, noKP } = req.body;
 
         // Memastikan peserta diberikan
-        if (!pesertaBaharu) {
-            return res.status(400).send({ mesej: 'Sila berikan peserta' });
-        }
-    
-        // Memastikan format betul
-        if (!Array.isArray(pesertaBaharu)) {
-            return res.status(400).send({ mesej: 'Sila letakkan peserta dalam Array' });
-        }
-    
-        let i = 1;
-        const cipta = [];
-    
-        for (const peserta of pesertaBaharu) {
-            const { nama_peserta } = peserta
-
-            // Memastikan nama peserta tidak kosong
-            if (!nama_peserta) {
-                return res.status(400).send({ mesej: `Sila masukkan nama peserta ${i}`});
-            }
-    
-            i++;
-
-            const { _id: pertandingan_id } = req.pertandingan;
-
-            // Mencipta Array baharu untuk menapis ciri objek yang tidak berkaitan
-            cipta.push({
-                pertandingan_id,
-                nama_peserta
-            });
+        if (!(emel && namaPenuh && katalaluan && namaAkaun && noKP)) {
+            return res.status(400).send({ mesej: 'Sila lengkapkan maklumat anda' });
         }
 
-        // Mencipta peserta-peserta baharu
-        await Peserta.insertMany(cipta)
-        .catch((err) => {
-            console.log(err);
-            return res.status(400).send({ mesej: 'Sila lengkapkan butiran peserta dengan betul' });
-        })
-    
-        res.status(201).send({ mesej: 'Peserta-peserta berjaya didaftar' });
+        if (noKP.length !== 12) {
+            return res.status(400).send({ mesej: 'Sila berikan nombor Kad Pengenalan yang sah'});
+        }
+
+        const emelTerdaftar = await Peserta.findOne({ emel });
+
+        if (emelTerdaftar) {
+            return res.status(400).send({ mesej: 'Emel telah berdaftar' });
+        }
+
+        const katalaluanDisulit = await hash(katalaluan, 10);
+
+        const peserta = new Peserta({
+            emel,
+            namaAkaun,
+            katalaluan: katalaluanDisulit,
+            namaPenuh,
+            noKP
+        });
+
+        const session = new Session({
+            peserta: peserta._id
+        });
+
+        peserta.save();
+        session.save();
+
+        res.status(200).send({ session: session._id });
+        
     } catch (err) {
         console.log(err);
         res.status(500).end();
     }
+});
+
+router.post('/log_masuk', async (req, res) => {
+    const { emel, katalaluan } = req.body;
+
+    if (!(emel && katalaluan)) {
+        return res.status(400).send({ mesej: 'Sila lengkapkan maklumat anda'})
+    }
+
+    const peserta = await Peserta.findOne({ emel }, 'katalaluan');
+
+    if (!(peserta && (await compare(katalaluan, peserta.katalaluan)))) {
+        return res.status(400).send({ mesej: 'Emel atau katalaluan tidak benar'});
+    }
+
+    const hapusSession = await Session.deleteMany({ peserta: peserta._id });
+
+    const session = new Session({
+        peserta: peserta._id
+    });
+
+    session.save();
+
+    res.status(200).send({ session: session._id });
 });
 
 router.get('/', async (req, res) => {

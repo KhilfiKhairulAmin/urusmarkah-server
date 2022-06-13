@@ -1,9 +1,10 @@
 const { Schema, model } = require('mongoose');
 
 const skemaPeserta = new Schema({
-    emel: { type: String, required: true },
+    emel: { type: String, required: true, unique: true },
     namaPenuh: { type: String, required: true },
-    noKP: { type: Number, required: true },
+    katalaluan: { type: String, required: true },
+    noKP: { type: String, required: true, unique: true },
     namaAkaun: { type: String, required: true },
     tarikhMasaDaftar: Date
 });

@@ -5,7 +5,7 @@ const Pertandingan = require('../model/Pertandingan');
 const Peserta = require('../model/Peserta');
 const router = express.Router();
 
-router.post('/cipta', (req, res) => {
+router.post('/cipta', async (req, res) => {
     try {
         const { namaPertandingan } = req.body;
 
