@@ -21,7 +21,7 @@ router.post('/cipta', async (req, res) => {
 
         if (!penyingkiranWujud) throw new Ralat('penyingkiran', 'Jenis Penyingkiran tidak wujud');
 
-        if (nama.length > 255) throw new Ralat('nama', 'Nama pertandingan tidak boleh melebihi 255 perkataan');
+        if (!nama || nama.length > 255) throw new Ralat('nama', 'Nama pertandingan mesti wujud dan tidak boleh melebihi 255 perkataan');
 
         // Mencipta pertandingan baharu
         const pertandingan = new Pertandingan({
@@ -156,9 +156,5 @@ router.delete('/:pertandingan/hapus', async (req, res) => {
         kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran mengikut format betul')
     }
 });
-
-// Route peserta
-const routePeserta = require('./peserta');
-router.use('/:pertandingan_id/peserta', dapatkanPertandingan, routePeserta);
 
 module.exports = router;

@@ -9,12 +9,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Model data pengguna
-const Pengguna = require('../model/Pengelola');
+const Pengelola = require('../model/Pengelola');
 const Validasi = require('../model/Validasi');
 
 // Utility function
 const janaTokenJWT = require('../util/janaTokenJWT');
-const Pengelola = require('../model/Pengelola');
 
 /* POST log masuk akaun pengguna
 
@@ -30,7 +29,7 @@ router.post('/log_masuk', async (req, res) => {
         }
 
         // Mencari pengguna
-        const pengelola = await Pengguna.findOne({ emel }, 'validasi').populate('validasi', 'katalaluan');
+        const pengelola = await Pengelola.findOne({ emel }, 'validasi').populate('validasi', 'katalaluan');
 
         // Memastikan pengguna wujud dan kata laluan betul
         if (pengelola && (await bcrypt.compare(katalaluan, pengelola.validasi.katalaluan))) {

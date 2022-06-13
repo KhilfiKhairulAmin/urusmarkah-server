@@ -4,24 +4,27 @@ const Peserta = require('../model/Peserta');
 const Session = require('../model/Session');
 const router = express.Router();
 const pengesahanSession = require('../middleware/pengesahanSession');
+const kendaliRalatMongoose = require('../util/kendaliRalatMongoose');
+const Ralat = require('../util/Ralat');
+const {validasiEmel, validasiKatalaluan} = require('../util/validasiInput');
 
 router.post('/daftar', async (req, res) => {
     try {
-        const { emel, namaAkaun, namaPenuh, noKP, katalaluan } = req.body;
+        const { emel: validE, namaAkaun, namaPenuh, noKP, katalaluan: validKl } = req.body;
 
-        if (!(emel && namaAkaun && namaPenuh && noKP && katalaluan)) {
-            return res.status(400).send({ mesej: 'Sila lengkapkan maklumat anda'});
-        }
+        const emel = validasiEmel(validE);
 
-        if (noKP.length !== 12) {
-            return res.status(400).send({ mesej: 'Nombor Kad Pengenalan tidak sah' });
-        }
+        const emelDigunakan = await Peserta.findOne({ emel }, '_id');
 
-        const emelDigunakan = await Peserta.findOne({ emel });
+        if (emelDigunakan) throw new Ralat('Emel', 'Emel sudah berdaftar');
 
-        if (emelDigunakan) {
-            return res.status(400).send({ mesej: 'Emel sudah digunakan'});
-        }
+        if (noKP.length !== 12) throw new Ralat('noKP', 'Nombor Kad Pengenalan mesti mengandungi tepat 12 digit nombor');
+
+        if (namaPenuh.length > 120) throw new Ralat('namaPenuh', 'Nama penuh tidak boleh melebihi 120 huruf');
+
+        if (namaAkaun.length > 40) throw new Ralat('namaAkaun', 'Nama akaun tidak boleh melebihi 40 huruf');
+
+        const katalaluan = validasiKatalaluan(validKl);
 
         const katalaluanDisulit = await hash(katalaluan, 10);
 
@@ -38,30 +41,27 @@ router.post('/daftar', async (req, res) => {
             peserta: peserta._id
         });
 
-        peserta.save();
-        session.save();
+        await peserta.save();
+        await session.save();
 
         res.status(201).send({ session: session._id });
 
-    } catch (err) {
-        console.log(err);
-        res.status(500).end();
+    } catch (ralat) {
+        console.log(ralat);
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran anda mengikut format yang betul');
     }
 });
 
 router.post('/log_masuk', async (req, res) => {
     try {
-        const { emel, katalaluan } = req.body;
+        const { emel: validE, katalaluan: validKl } = req.body;
 
-        if (!(emel && katalaluan)) {
-            return res.status(400).send({ mesej: 'Sila lengkapkan maklumat anda'});
-        }
+        const emel = validasiEmel(validE);
+        const katalaluan = validasiKatalaluan(validKl);
     
         const peserta = await Peserta.findOne({ emel }, 'katalaluan');
     
-        if (!(peserta && (await compare(katalaluan, peserta.katalaluan)))) {
-            return res.status(400).send({ mesej: 'Emel atau katalaluan salah'});
-        }
+        if (!(peserta && (await compare(katalaluan, peserta.katalaluan)))) throw new Ralat('emel | katalaluan', 'Emel atau katalaluan salah');
     
         await Session.deleteOne({ peserta: peserta._id });
     
@@ -69,12 +69,12 @@ router.post('/log_masuk', async (req, res) => {
             peserta: peserta._id
         });
     
-        session.save();
+        await session.save();
     
         res.status(200).send({ session: session._id });
         
-    } catch (err) {
-        if (err) return res.status(500).send({ mesej: 'Masalah dalaman server'});
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran anda mengikut format yang betul')
     }
 });
 
@@ -85,9 +85,8 @@ router.get('/', async (req, res) => {
         const { peserta } = req;
 
         res.status(200).send(peserta);
-    } catch (err) {
-        console.log(err);
-        res.status(500).end();
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Peserta gagal dijumpai');
     }
 });
 
@@ -98,37 +97,33 @@ router.put ('/kemas_kini', async (req, res) => {
         const { peserta } = req;
 
         if (katalaluanBaharu) {
-            if (!katalaluanLama) {
-                return res.status(400).send({ mesej: 'Sila masukkan katalaluan lama'});
-            }
+            validasiKatalaluan(katalaluanBaharu);
 
-            if(await compare(katalaluanLama, peserta.katalaluan)) {
-                return res.status(400).send({ mesej: 'Katalaluan lama salah'});
-            }
+            if (!katalaluanLama) throw new Ralat('katalaluanLama', 'Sila berikan katalaluan lama untuk menetapkan katalaluan baharu');
+
+            if(await compare(katalaluanLama, peserta.katalaluan)) throw new Ralat('katalaluanLama', 'Katalaluan lama salah');
 
             const katalaluanDisulit = await hash(katalaluanBaharu, 10);
 
             peserta.katalaluan = katalaluanDisulit
         }
 
-        if (noKP) {
-            if (noKP.length !== 12) {
-                return res.status(400).send({ mesej: 'Nombor Kad Pengenalan tidak sah'});
-            }
+        if (noKP && noKP.length !== 12) throw new Ralat('noKP', 'Nombor Kad Pengenalan mesti mengandungi tepat 12 digit nombor');
 
-            peserta.noKP = noKP;
-        }
+        if (namaPenuh && namaPenuh.length > 120) throw new Ralat('namaPenuh', 'Nama penuh tidak boleh melebihi 120 huruf');
 
+        if (namaAkaun && namaAkaun.length > 40) throw new Ralat('namaAkaun', 'Nama akaun tidak boleh melebihi 40 huruf');
+
+        peserta.noKP = noKP || peserta.noKP;
         peserta.namaAkaun = namaAkaun || peserta.namaAkaun;
         peserta.namaPenuh = namaPenuh || peserta.namaPenuh;
 
-        peserta.save();
+        await peserta.save();
 
         res.status(200).send(peserta);
 
-    } catch (err) {
-        console.log(err);
-        res.status(500).end();
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran anda mengikut format yang betul');
     }
 });
 
