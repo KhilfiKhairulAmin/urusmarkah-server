@@ -32,6 +32,8 @@ router.put('/:pertandingan', async (req, res) => {
         markahPeserta.push(urus);
     }
 
+    
+
     // Menyimpan data markah yang dikemaskini
     for (const markah of markahPeserta) {
         await markah.save();
