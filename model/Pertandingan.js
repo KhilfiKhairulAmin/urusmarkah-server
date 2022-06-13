@@ -12,8 +12,8 @@ const skemaPertandingan = new Schema({
             url: String
         }] }
     },
+    hadPeserta: { type: Number },
     pengiraan: { type: Schema.Types.ObjectId, ref: 'pengiraan', required: true },
-    penyingkiran: { type: Schema.Types.ObjectId, ref: 'penyingkiran', required: true },
     tarikhMasa: {
         cipta: Date,
         laksana: Date,
@@ -26,7 +26,8 @@ const skemaPertandingan = new Schema({
         purata: Number,
         julat: Number,
         standardDeviation: Number
-    }
+    },
+    format: { type: Object, required: true, default: {}}
 });
 
 module.exports = model('pertandingan', skemaPertandingan, 'pertandingan');
