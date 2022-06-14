@@ -14,7 +14,8 @@ const Validasi = require('../model/Validasi');
 
 // Utility function
 const janaTokenJWT = require('../util/janaTokenJWT');
-
+const Ralat = require('../util/Ralat');
+const kendaliRalatMongoose = require('../util/kendaliRalatMongoose');
 /* POST log masuk akaun pengguna
 
 */
@@ -24,38 +25,35 @@ router.post('/log_masuk', async (req, res) => {
         const { emel, katalaluan } = req.body;
 
         // Memastikan input tidak kosong
-        if (!(emel && katalaluan)) {
-            return res.status(400).send({ mesej: 'Sila lengkapkan butiran anda' });
-        }
+        if (!(emel && katalaluan)) throw new Ralat('emel | katalaluan', 'Sila berikan nama dan katalaluan');
 
         // Mencari pengguna
         const pengelola = await Pengelola.findOne({ emel }, 'validasi').populate('validasi', 'katalaluan');
 
+        if (!pengelola) throw new Ralat('emel', 'Emel belum berdaftar');
+
         // Memastikan pengguna wujud dan kata laluan betul
-        if (pengelola && (await bcrypt.compare(katalaluan, pengelola.validasi.katalaluan))) {
+        if (!((await bcrypt.compare(katalaluan, pengelola.validasi.katalaluan)))) throw new Ralat('katalaluan', 'Katalaluan atau emel salah');
 
-            const { validasi } = pengelola;
+        const { validasi } = pengelola;
 
-            const muatan = { validasi: validasi._id, pengelola: pengelola._id }
+        const muatan = { validasi: validasi._id, pengelola: pengelola._id }
 
-            // Membuat token baharu
-            const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
+        // Membuat token baharu
+        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
 
-            // Membuat refresh token baharu
-            const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY'});
+        // Membuat refresh token baharu
+        const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY'});
 
-            // const validasi = await Validasi.findById(pengelola.validasi._id, 'refreshToken');
-            validasi.refreshToken = [refreshToken];
-            validasi.save();
+        // const validasi = await Validasi.findById(pengelola.validasi._id, 'refreshToken');
+        validasi.refreshToken = [refreshToken];
+        validasi.save();
 
-            // Menghantar response
-            return res.status(200).json({ token, refreshToken });
-        }
+        // Menghantar response
+        return res.status(200).json({ token, refreshToken });
 
-        res.status(400).send({ mesej: 'Emel atau kata laluan salah'});
-    } catch (err) {
-        console.log(err)
-        res.status(500).send({ mesej: 'Masalah dalaman server' });
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran log masuk diberikan');
     }
 });
 
@@ -67,17 +65,13 @@ router.get('/refresh_token', async (req, res) => {
         const refreshTokenDiberi = bearer[1];
         
         // Memastikan refresh token wujud
-        if(!refreshTokenDiberi) {
-            return res.status(400).send({ mesej: 'Refresh token diperlukan'});
-        }
+        if(!refreshTokenDiberi) throw new Ralat('refreshToken', 'Sila berikan refresh token');
 
         // Mendapatkan pengguna yang memegang refresh token tersebut
         const validasi = await Validasi.findOne({ refreshToken: refreshTokenDiberi });
 
         // Memastikan ada pengguna yang memegang refresh token
-        if(!validasi) {
-            return res.status(400).send({ mesej: 'Refresh token tidak dikenali'});
-        }
+        if(!validasi) throw new Ralat('Pencarian', 'Token tidak wujud');
 
         // Memastikan refresh token merupakan refresh token yang terkini
         if (refreshTokenDiberi !== validasi.refreshToken[0]) {
@@ -86,7 +80,7 @@ router.get('/refresh_token', async (req, res) => {
             validasi.refreshToken = [];
             validasi.save();
 
-            return res.status(403).send({ mesej: 'Refresh token luput diberi. Anda perlu log masuk semula untuk mengesahkan identiti anda'});
+            throw new Ralat('Tidak sah', 'Anda perlu log masuk semula')
         }
 
         let muatanLama;
@@ -94,13 +88,13 @@ router.get('/refresh_token', async (req, res) => {
         try {
             // Menguji sama ada refresh token belum luput
             muatanLama = jwt.verify(refreshTokenDiberi, process.env.REFRESH_TOKEN_KEY);
-            console.log(muatanLama)
-        } catch (err) {
+
+        } catch (ralat) {
             // Menghapuskan semua refresh token
             validasi.refreshToken = [];
             validasi.save();
 
-            return res.status(403).send({ mesej: 'Refresh token luput. Anda perlu log masuk semula untuk mendapatkan akses'});
+            throw new Ralat('Luput', 'Anda perlu log masuk semula')
         }
 
         const { pengelola } = muatanLama;

@@ -5,8 +5,8 @@ const skemaPengelola = new Schema({
     namaAkaun: { type: String, required: true },
     namaPenuh: { type: String, required: true },
     tarikhMasa: {
-        daftar: Date,
-        logMasukTerakhir: Date
+        daftar: { type: Date},
+        logMasukTerakhir: { type: Date}
     },
     validasi: { type: Schema.Types.ObjectId, ref: 'validasi' }
 });

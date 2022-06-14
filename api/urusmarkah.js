@@ -62,8 +62,5 @@ router.put('/:pertandingan', async (req, res) => {
         res.send(200).send(markahPeserta);
     } catch (ralat) {
         kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran markah tepat');
-    }
-
-    
+    } 
 });
-
