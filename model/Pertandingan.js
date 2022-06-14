@@ -13,7 +13,6 @@ const skemaPertandingan = new Schema({
         }] }
     },
     hadPeserta: { type: Number },
-    pengiraan: { type: Schema.Types.ObjectId, ref: 'pengiraan', required: true },
     tarikhMasa: {
         cipta: Date,
         laksana: Date,
@@ -27,7 +26,11 @@ const skemaPertandingan = new Schema({
         julat: Number,
         standardDeviation: Number
     },
-    format: { type: Object, required: true, default: {}}
+    format: {
+        markah: { type: Array, default: [], required: true},
+        jumlah: { type: Number, default: 0, required: true},
+        kedudukan: { type: Number, default: 0, required: true}
+    }
 });
 
 module.exports = model('pertandingan', skemaPertandingan, 'pertandingan');
