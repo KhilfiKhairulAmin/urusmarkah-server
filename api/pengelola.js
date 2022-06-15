@@ -39,8 +39,6 @@ router.post('/daftar', async (req, res) => {
             return res.status(409).send('Emel sudah digunakan')
         }
 
-        const tarikh = new Date().toLocaleString();
-
         // Menyulitkan kata laluan pengelola supaya tidak boleh dibaca
         const kataLaluanDisulit = await bcrypt.hash(katalaluan, 10);
 
@@ -54,8 +52,8 @@ router.post('/daftar', async (req, res) => {
             namaAkaun,
             namaPenuh,
             tarikhMasa: {
-                daftar: tarikh,
-                logMasukTerakhir: tarikh
+                daftar: new Date(),
+                logMasukTerakhir: new Date()
             },
             validasi: validasi._id
         });
