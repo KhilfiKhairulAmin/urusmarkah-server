@@ -28,9 +28,9 @@ router.post('/log_masuk', async (req, res) => {
         if (!(emel && katalaluan)) throw new Ralat('emel | katalaluan', 'Sila berikan nama dan katalaluan');
 
         // Mencari pengguna
-        const pengelola = await Pengelola.findOne({ emel }, 'validasi').populate('validasi', 'katalaluan');
+        const pengelola = await Pengelola.findOne({ emel }, 'validasi tarikhMasa').populate('validasi', 'katalaluan');
 
-        if (!pengelola) throw new Ralat('emel', 'Emel belum berdaftar');
+        if (!pengelola) throw new Ralat('katalaluan', 'Katalaluan atau emel salah');
 
         // Memastikan pengguna wujud dan kata laluan betul
         if (!((await bcrypt.compare(katalaluan, pengelola.validasi.katalaluan)))) throw new Ralat('katalaluan', 'Katalaluan atau emel salah');
@@ -47,6 +47,7 @@ router.post('/log_masuk', async (req, res) => {
 
         // const validasi = await Validasi.findById(pengelola.validasi._id, 'refreshToken');
         validasi.refreshToken = [refreshToken];
+        pengelola.tarikhMasa.logMasukTerakhir = new Date();
         validasi.save();
 
         // Menghantar response
@@ -114,9 +115,8 @@ router.get('/refresh_token', async (req, res) => {
 
         res.status(201).json({ token, refreshToken })
 
-    } catch (err) {
-        console.log(err);
-        return res.status(500).send({ mesej: 'Masalah dalaman server' });
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Refresh token tidak sah');
     }
 });
 

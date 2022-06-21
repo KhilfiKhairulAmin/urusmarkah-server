@@ -5,22 +5,48 @@ const kendaliRalatMongoose = require('../util/kendaliRalatMongoose');
 const Ralat = require('../util/Ralat');
 const router = express.Router();
 
+router.put('/laksana/:pertandingan', async (req, res) => {
+    try {
+        const { pertandingan: _id } = req.params;
+    
+        const pertandingan = await Pertandingan.findById(_id, 'format status');
+
+        if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak dijumpai');
+        
+        pertandingan.status = 1;
+    
+        const peserta = await Markah.find({ pertandingan: _id }, 'urusmarkah');
+    
+        for (const p of peserta) {
+            p.urusmarkah = pertandingan.format;
+    
+            await p.save();
+        }
+        
+        pertandingan.save();
+
+        res.status(200).send({ mesej: 'Pertandingan berjaya dilaksanakan'});
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila periksa butiran anda')
+    }
+});
+
 router.put('/:pertandingan', async (req, res) => {
     try {
         const { pertandingan: _id } = req.params;
-        const { pengelola } = req;
-        const { urusmarkah } = req.body;
+        const { pengelola } = req.muatanToken;
+        const { markah, nilai } = req.body;
 
         const pertandingan = await Pertandingan.findOne({ pertandingan: _id, pengelola });
 
         if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak wujud');
 
-        const { markah, nilai } = urusmarkah;
+        console.log(markah.length + " " + nilai.length)
 
-        if (markah.length === nilai.length) throw new Ralat('urusmarkah.markah & urusmarkah.nilai', 'Bilangan item Array dalam markah dan nilai mesti sama');
+        if (markah.length !== nilai.length) throw new Ralat('urusmarkah.markah & urusmarkah.nilai', 'Bilangan item Array dalam markah dan nilai mesti sama');
 
         for (const n of nilai) {
-            if (typeof n !== String || typeof n !== Number) throw new Ralat('nilai', 'Hanya jenis data String dan Number dibenarkah');
+            if ((typeof n) !== String || (typeof n) !== Number) throw new Ralat('nilai', 'Hanya jenis data String dan Number dibenarkah');
 
             if (typeof parseInt(n) === NaN) throw new Ralat('nilai', 'Nilai String mestilah menggunakan nombor');
         }
@@ -40,18 +66,18 @@ router.put('/:pertandingan', async (req, res) => {
 
             // Penambahan
             let tambah;
-            if (typeof nilai[i] === String) {
+            if ((typeof nilai[i]) === String) {
                 // Setter
                 tambah = parseInt(nilai[i]);
+                markahPeserta[i].markah.push(tambah - markahPeserta[i].jumlah);
                 markahPeserta[i].jumlah = tambah;
             }
             else {
                 // Operator
                 tambah = nilai[i];
                 markahPeserta[i].jumlah += tambah;
+                markahPeserta[i].markah.push(tambah);
             }
-
-            markahPeserta[i].markah.push(tambah);
         }
 
         // Menyimpan data markah yang dikemaskini
@@ -59,8 +85,13 @@ router.put('/:pertandingan', async (req, res) => {
             await markah.save();
         }
 
-        res.send(200).send(markahPeserta);
+        const hantar = await Markah.find({ pertandingan: _id }).sort([ 'jumlah' ]).populate('peserta');
+
+        res.send(200).send(hantar);
+
     } catch (ralat) {
         kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran markah tepat');
     } 
 });
+
+module.exports = router;

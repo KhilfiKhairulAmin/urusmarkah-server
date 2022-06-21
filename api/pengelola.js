@@ -18,6 +18,9 @@ const Validasi = require('../model/Validasi');
 
 // Utility function
 const janaTokenJWT = require('../util/janaTokenJWT');
+const Ralat = require('../util/Ralat');
+const kendaliRalatMongoose = require('../util/kendaliRalatMongoose');
+const { validasiEmel, validasiKatalaluan } = require('../util/validasiInput');
 
 /* POST cipta akaun pelanggan
 
@@ -28,16 +31,22 @@ router.post('/daftar', async (req, res) => {
         const { emel, namaAkaun, namaPenuh, katalaluan } = req.body;
 
         // Memastikan nilai tidak kosong
-        if (!(emel && namaAkaun && namaPenuh && katalaluan)) {
-            return res.status(400).send("Butiran tidak lengkap. Sila lengkapkan butiran anda.");
-        }
+        if (!emel) throw new Ralat('emel', 'Sila berikan emel');
+
+        validasiEmel(emel);
+
+        if (!katalaluan) throw new Ralat('katalaluan', 'Sila berikan katalaluan');
+
+        validasiKatalaluan(katalaluan);
+
+        if (namaAkaun.length > 40) throw new Ralat('namaAkaun', 'Nama Akaun tidak boleh melebihi 40 huruf');
+
+        if (namaPenuh.length > 120) throw new Ralat('namaPenuh', 'Nama penuh tidak boleh melebihi 120 huruf');
 
         // Memastikan emel belum diambil oleh pengelola lain
         const pengelolaLama = await Pengelola.findOne({ emel });
 
-        if (pengelolaLama) {
-            return res.status(409).send('Emel sudah digunakan')
-        }
+        if (pengelolaLama) throw new Ralat('emel', 'Emel sudah berdaftar');
 
         // Menyulitkan kata laluan pengelola supaya tidak boleh dibaca
         const kataLaluanDisulit = await bcrypt.hash(katalaluan, 10);
@@ -68,15 +77,13 @@ router.post('/daftar', async (req, res) => {
 
         validasi.refreshToken = [refreshToken]
 
-        validasi.save();
-        pengelola.save();
+        await validasi.save();
+        await pengelola.save();
 
-        res.status(201).send({ token, refreshToken })
+        res.status(200).send({ token, refreshToken });
 
-    } catch (err) {
-        // Ralat berlaku
-        console.log(err);
-        res.status(500).send({ mesej: 'Masalah dalaman server' });
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran lengkap');
     }
 });
 
@@ -99,10 +106,8 @@ router.get('/', async (req, res) => {
         const maklumatpengelola = await Pengelola.findById(pengelola, '-validasi');
 
         return res.status(200).json(maklumatpengelola);
-    } catch (err) {
-        // Ralat berlaku
-        console.log(err);
-        res.status(500).send({ mesej: 'Masalah dalaman server' });
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran betul');
     }
 });
 
@@ -116,6 +121,8 @@ router.put('/kemas_kini', async (req, res) => {
         // Mencari pengelola
         const pengelola = await Pengelola.findById(_id, 'namaAkaun namaPenuh').populate('validasi', 'katalaluan');
 
+        if (!pengelola) throw new Ralat('Pencarian', 'Pengelola tidak dijumpai');
+
         const { namaAkaun, namaPenuh, katalaluanLama, katalaluanBaharu } = req.body;
 
         const { validasi } = pengelola;
@@ -124,30 +131,28 @@ router.put('/kemas_kini', async (req, res) => {
         if (katalaluanBaharu) {
 
             // Memastikan kesahan kata laluan lama
-            if (!(katalaluanLama && await bcrypt.compare(katalaluanLama, validasi.katalaluan))) {
-                return res.status(400).send({ mesej: 'Katalaluan lama tidak benar' });
-            }
+            if (!(katalaluanLama && await bcrypt.compare(katalaluanLama, validasi.katalaluan))) throw new Ralat('katalaluan', 'Katalaluan tidak benar');
 
             // Menyulitkan kata laluan
             const katalaluanDisulit = await bcrypt.hash(katalaluanBaharu, 10);
 
             // Mengemaskini kata laluan pengelola
             validasi.katalaluan = katalaluanDisulit;
-            validasi.save();
+            await validasi.save();
         }
 
         // Mengemaskini nama pengelola
+        console.log(req.body)
         pengelola.namaPenuh = namaPenuh || pengelola.namaPenuh;
         pengelola.namaAkaun = namaAkaun || pengelola.namaAkaun;
 
         // Menyimpan maklumat dalam pangkalan data
-        pengelola.save();
+        await pengelola.save();
 
         res.status(200).send(pengelola);
 
-    } catch (err) {
-        console.log(err);
-        res.status(500).send({ mesej: 'Masalah dalaman server' });
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan maklumat diberikan dengan tepat');
     }
 });
 
@@ -157,19 +162,22 @@ router.get('/validasi', (req, res) => {
 
 /* POST log keluar
 */
-router.post('/log_keluar', async (req, res) => {
+router.put('/log_keluar', async (req, res) => {
+    try {
+        const { validasi: _id } = req.muatanToken;
 
-    const { validasi: _id } = req.muatanToken;
-
-    // Mencari validasi pengelola
-    const validasi = await Validasi.findById(_id, 'refreshToken');
-
-    // Menghapuskan semua akses refresh token
-    validasi.refreshToken = [];
-
-    validasi.save();
-
-    res.status(200).send({ mesej: 'Log keluar berjaya' });
+        // Mencari validasi pengelola
+        const validasi = await Validasi.findById(_id, 'refreshToken');
+    
+        // Menghapuskan semua akses refresh token
+        validasi.refreshToken = [];
+    
+        validasi.save();
+    
+        res.status(200).send({ mesej: 'Log keluar berjaya' });
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Ralat tidak diketahui berlaku');
+    }
 });
 
 // Mengeksport router untuk digunakan oleh aplikasi

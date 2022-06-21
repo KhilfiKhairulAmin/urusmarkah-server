@@ -12,14 +12,13 @@ const skemaPertandingan = new Schema({
             url: String
         }] }
     },
-    hadPeserta: { type: Number },
+    bilPeserta: { type: Number, default: 0 },
+    status: { type: Number, enum: [0, 1, 2], default: 0},
     tarikhMasa: {
         cipta: Date,
         laksana: Date,
         tamat: Date
     },
-    bilPusingan: Number,
-    bilPeserta: { type: Number, default: 0 },
     statistik: {
         jumlah: Number,
         purata: Number,

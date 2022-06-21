@@ -1,4 +1,5 @@
 const express = require('express');
+const Markah = require('../model/Markah');
 const Pertandingan = require('../model/Pertandingan');
 const penjanaTarikhMasa = require('../util/janaTarikhMasa');
 const router = express.Router();
@@ -17,7 +18,7 @@ router.post('/cipta', async (req, res) => {
             pengelola,
             nama,
             tarikhMasa: {
-                cipta: penjanaTarikhMasa()
+                cipta: new Date()
             }
         });
 
@@ -49,7 +50,7 @@ router.get('/:pertandingan', async (req, res) => {
         const { pertandingan: _id } = req.params;
         const { pengelola } = req.muatanToken;
 
-        const pertandingan = await Pertandingan.findOne({ _id, pengelola }, '-pengelola -_id').populate('pengiraan', '-_id');
+        const pertandingan = await Pertandingan.findOne({ _id, pengelola }).populate('pengelola', '-validasi');
 
         if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak wujud' );
 
@@ -65,7 +66,7 @@ router.put('/:pertandingan/kemas_kini', async (req, res) => {
     try {
         const { pertandingan: _id } = req.params;
         const { pengelola } = req.muatanToken;
-        const { nama, deskripsi, tarikhPelaksanaan, syarat, sumber } = req.body;
+        const { nama, deskripsi, tarikhPelaksanaan, syarat, sumber, hadPeserta } = req.body;
 
         const pertandingan = await Pertandingan.findOne({ _id, pengelola }, 'nama tentang');
 
@@ -75,16 +76,25 @@ router.put('/:pertandingan/kemas_kini', async (req, res) => {
 
         if (deskripsi && deskripsi.length > 511) throw new Ralat('deskripsi', 'Deskripsi pertandingan tidak boleh melebihi 511 perkataan');
 
-        if (syarat && !Array.isArray(syarat)) throw new Ralat('syarat', 'Syarat-syarat perlu diletakkan dalam Array')
+        if (hadPeserta && hadPeserta < 1 && hadPeserta > 999) throw new Ralat('hadPeserta', 'Had Peserta mesti antara 1 - 999');
 
-        if (sumber && !Array.isArray(sumber)) throw new Ralat('sumber', 'Sumber-sumber perlu diletakkan dalam Array')
+        if (syarat && !Array.isArray(syarat)) throw new Ralat('syarat', 'Syarat-syarat perlu diletakkan dalam Array');
 
-        const { tentang } = pertandingan;
+        if (sumber && !Array.isArray(sumber)) throw new Ralat('sumber', 'Sumber-sumber perlu diletakkan dalam Array');
 
-        tentang.deskripsi = deskripsi || tentang.deskripsi;
-        tentang.tarikhPelaksanaan = tarikhPelaksanaan || tentang.tarikhPelaksanaan;
-        tentang.syarat = syarat || tentang.syarat;
-        tentang.sumber = sumber || tentang.sumber;
+        syarat.forEach((s) => {
+            if (!s) throw new Ralat('syarat', 'Syarat tidak boleh kosong')
+        });
+
+        sumber.forEach((s) => {
+            if (!s.nama || !s.url) throw new Ralat('sumber.nama | sumber.url', 'Sumber tidak boleh kosong');
+        });
+        console.log(deskripsi)
+        pertandingan.nama = nama || pertandingan.nama;
+        pertandingan.tentang.deskripsi = (deskripsi === "") ? "" : pertandingan.tentang.deskripsi;
+        pertandingan.tentang.tarikhPelaksanaan = (tarikhPelaksanaan && new Date(tarikhPelaksanaan)) || pertandingan.tentang.tarikhPelaksanaan;
+        pertandingan.tentang.syarat = syarat || pertandingan.tentang.syarat;
+        pertandingan.tentang.sumber = sumber || pertandingan.tentang.sumber;
 
         await pertandingan.save();
 
@@ -99,6 +109,8 @@ router.delete('/:pertandingan/hapus', async (req, res) => {
         const { pertandingan: _id } = req.params;
         const { pengelola } = req.muatanToken;
         const { nama } = req.body;
+
+        console.log(req.body)
     
         // Memastikan pengesahan diberi
         // Pengesahan ialah nama pertandingan yang hendak dihapuskan
@@ -119,6 +131,32 @@ router.delete('/:pertandingan/hapus', async (req, res) => {
         res.status(200).send({ mesej: 'Pertandingan berjaya dihapuskan'});
     } catch (ralat) {
         kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran mengikut format betul')
+    }
+});
+
+router.get('/:pertandingan/peserta', async (req, res) => {
+    try {
+        const { pertandingan } = req.params;
+
+        const peserta = await Markah.find({ pertandingan }).populate('peserta', 'namaAkaun namaPenuh');
+
+        res.status(200).send(peserta);
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Peserta tidak dijumpai')
+    }
+});
+
+router.get('/:pertandingan/peserta/:peserta', async (req, res) => {
+    try {
+        const { pertandingan, peserta: _id } = req.params;
+
+        const peserta = await Markah.findOne({ pertandingan, peserta: _id }).populate('peserta', 'namaAkaun namaPenuh');
+
+        if (!peserta) throw new Ralat('Pencarian', 'Peserta tidak dijumpai')
+
+        res.status(200).send(peserta);
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Peserta tidak dijumpai')
     }
 });
 

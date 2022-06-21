@@ -6,7 +6,9 @@ const router = express.Router();
 const pengesahanSession = require('../middleware/pengesahanSession');
 const kendaliRalatMongoose = require('../util/kendaliRalatMongoose');
 const Ralat = require('../util/Ralat');
-const {validasiEmel, validasiKatalaluan} = require('../util/validasiInput');
+const { validasiEmel, validasiKatalaluan} = require('../util/validasiInput');
+const Pertandingan = require('../model/Pertandingan');
+const Markah = require('../model/Markah');
 
 router.post('/daftar', async (req, res) => {
     try {
@@ -34,7 +36,7 @@ router.post('/daftar', async (req, res) => {
             namaPenuh,
             noKP,
             katalaluan: katalaluanDisulit,
-            tarikhMasaDaftar: new Date().toLocaleString()
+            tarikhMasaDaftar: new Date()
         });
 
         const session = new Session({
@@ -127,4 +129,141 @@ router.put ('/kemas_kini', async (req, res) => {
     }
 });
 
-module.exports = router;
+router.put('/log_keluar', async (req, res) => {
+    try {
+        const { peserta } = req;
+
+        const { deletedCount } = await Session.deleteOne({ peserta });
+
+        if (!deletedCount) throw new Ralat('Gagal', 'Log keluar gagal');
+
+        res.status(200).send({ mesej: 'Log Keluar berjaya'});
+
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran tepat');
+    }
+})
+
+router.get('/pertandingan', async (req, res) => {
+    try {
+        const { peserta } = req;
+
+        const pertandingan = await Markah.find({ peserta: peserta._id }, 'pertandingan').populate('pertandingan', 'pengelola nama tentang status');
+
+        console.log(pertandingan)
+
+        res.status(200).send(pertandingan);
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Tiada pertandingan dimasuki');
+    }
+})
+
+router.get('/pertandingan_terkini', async (req, res) => {
+    try {
+        const pertandingan = await Pertandingan.find({ status: 0 }, 'pengelola nama status bilPeserta').sort('bilPeserta').populate('pengelola', 'namaAkaun');
+
+        console.log(pertandingan)
+
+        res.status(200).send(pertandingan);
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Tiada pertandingan terkini');
+    }
+});
+
+router.get('/:pertandingan', async (req, res) => {
+    try {
+        const { pertandingan: _id } = req.params;
+        const { peserta } = req;
+
+        const pertandingan = await Pertandingan.findById(_id).populate('pengelola', 'namaAkaun');
+
+        if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak dijumpai');
+
+        const markah = await Markah.findOne({ pertandingan: _id, peserta });
+
+        const sudahSertai = markah ? true : false
+
+        const obj = { ...pertandingan }
+
+        res.status(200).send({ ...obj._doc, sudahSertai});
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran tepat');
+    }
+});
+
+router.post('/:pertandingan/sertai', async (req, res) => {
+    try {
+        const { pertandingan: _id } = req.params;
+        const { peserta } = req;
+
+        const markahWujud = await Markah.findOne({ pertandingan: _id, peserta });
+
+        if (markahWujud) throw new Ralat('Sudah Sertai', 'Anda sudah menyertai pertandingan ini');
+
+        const pertandingan = await Pertandingan.findById(_id, 'bilPeserta');
+
+        pertandingan.bilPeserta += 1;
+
+        const markah = new Markah({
+            pertandingan: _id,
+            peserta
+        });
+
+        await pertandingan.save();
+        await markah.save();
+
+        res.status(200).send(markah);
+
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran tepat');
+    }
+});
+
+router.post('/:pertandingan/keluar', async (req, res) => {
+    try {
+        const { pertandingan: _id } = req.params;
+        const { peserta } = req;
+
+        const markah = await Markah.findOneAndDelete({ pertandingan: _id, peserta }).populate('pertandingan');
+
+        const pertandingan = await Pertandingan.findById(_id);
+
+        pertandingan.bilPeserta -= 1;
+
+        if (!markah) throw new Ralat('Pencarian', 'Penyertaan tidak dijumpai');
+
+        await pertandingan.save();
+
+        res.status(200).send({ mesej: 'Pengeluaran berjaya'});
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran tepat');
+    }
+});
+
+router.get('/:pertandingan/peserta', async (req, res) => {
+    try {
+
+        const { pertandingan } = req.params;
+
+        const peserta = await Markah.find({ pertandingan }, 'peserta').populate('peserta');
+
+        res.status(200).send(peserta)
+    } catch (ralat) {
+
+    }
+});
+
+router.get('/:pertandingan/peserta/:peserta', async (req, res) => {
+    try {
+
+        const { pertandingan, peserta: _id } = req.params;
+
+        const peserta = await Markah.findOne({ pertandingan, peserta: _id }, 'peserta').populate('peserta', 'namaPenuh namaAkaun');
+
+        res.status(200).send(peserta);
+    } catch (ralat) {
+
+    }
+});
+
+module.exports = router; 
