@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
     try {
         const { pengelola } = req.muatanToken;
 
-        const semuaPertandingan = await Pertandingan.find({ pengelola }, 'nama tarikhMasa status');
+        const semuaPertandingan = await Pertandingan.find({ pengelola }, 'nama tarikhMasa status bilPeserta');
     
         res.status(200).send(semuaPertandingan);
 
