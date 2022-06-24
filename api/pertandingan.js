@@ -35,8 +35,13 @@ router.post('/cipta', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const { pengelola } = req.muatanToken;
+        const { nama } = req.query;
 
-        const semuaPertandingan = await Pertandingan.find({ pengelola }, 'nama tarikhMasa status bilPeserta');
+        const query = { pengelola };
+
+        if (nama) query.nama = { '$regex': nama, '$options':'i' };
+
+        const semuaPertandingan = await Pertandingan.find(query, 'nama tarikhMasa status bilPeserta');
     
         res.status(200).send(semuaPertandingan);
 
