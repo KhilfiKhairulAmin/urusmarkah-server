@@ -46,7 +46,7 @@ router.post('/daftar', async (req, res) => {
         await peserta.save();
         await session.save();
 
-        res.status(201).send({ session: session._id });
+        res.status(200).send({ session: session._id });
 
     } catch (ralat) {
         console.log(ralat);
