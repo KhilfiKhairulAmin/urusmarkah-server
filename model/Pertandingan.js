@@ -18,17 +18,6 @@ const skemaPertandingan = new Schema({
         cipta: Date,
         laksana: Date,
         tamat: Date
-    },
-    statistik: {
-        jumlah: Number,
-        purata: Number,
-        julat: Number,
-        standardDeviation: Number
-    },
-    format: {
-        markah: { type: Array, default: [], required: true},
-        jumlah: { type: Number, default: 0, required: true},
-        kedudukan: { type: Number, default: 0, required: true}
     }
 });
 

@@ -245,7 +245,11 @@ router.get('/:pertandingan/peserta', async (req, res) => {
 
         const { pertandingan } = req.params;
 
-        const peserta = await Markah.find({ pertandingan }, 'peserta').populate('peserta');
+        const peserta = await Markah.find({ pertandingan }).populate('peserta');
+
+        peserta.sort((a, b) => {
+            return b.jumlah - a.jumlah
+        });
 
         res.status(200).send(peserta)
     } catch (ralat) {

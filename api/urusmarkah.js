@@ -22,6 +22,7 @@ router.put('/laksana/:pertandingan', async (req, res) => {
     
             await p.save();
         }
+        pertandingan.tarikhMasa.laksana = new Date();
         
         pertandingan.save();
 
@@ -40,6 +41,7 @@ router.delete('/tamat/:pertandingan', async (req, res) => {
         if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak dijumpai');
         
         pertandingan.status = 2;
+        pertandingan.tarikhMasa.tamat = new Date();
         
         pertandingan.save();
 
