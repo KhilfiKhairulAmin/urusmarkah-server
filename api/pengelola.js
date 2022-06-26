@@ -41,7 +41,7 @@ router.post('/daftar', async (req, res) => {
 
         if (namaAkaun.length > 40) throw new Ralat('namaAkaun', 'Nama Akaun tidak boleh melebihi 40 huruf');
 
-        if (namaPenuh.length > 120) throw new Ralat('namaPenuh', 'Nama penuh tidak boleh melebihi 120 huruf');
+        if (namaPenuh.length > 255) throw new Ralat('namaPenuh', 'Nama penuh tidak boleh melebihi 255 huruf');
 
         // Memastikan emel belum diambil oleh pengelola lain
         const pengelolaLama = await Pengelola.findOne({ emel });

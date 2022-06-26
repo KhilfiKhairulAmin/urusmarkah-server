@@ -42,6 +42,14 @@ router.get('/', async (req, res) => {
         if (nama) query.nama = { '$regex': nama, '$options':'i' };
 
         const semuaPertandingan = await Pertandingan.find(query, 'nama tarikhMasa status bilPeserta');
+
+        semuaPertandingan.sort((a, b) => {
+            let x = a.nama.toLowerCase();
+            let y = b.nama.toLowerCase();
+            if (x < y) {return -1;}
+            if (x > y) {return 1;}
+            return 0;
+        });
     
         res.status(200).send(semuaPertandingan);
 
@@ -79,7 +87,7 @@ router.put('/:pertandingan/kemas_kini', async (req, res) => {
 
         if (nama && nama.length > 255) throw new Ralat('nama', 'Nama pertandingan tidak boleh melebihi 255 perkataan');
 
-        if (deskripsi && deskripsi.length > 511) throw new Ralat('deskripsi', 'Deskripsi pertandingan tidak boleh melebihi 511 perkataan');
+        // if (deskripsi && deskripsi.length > 511) throw new Ralat('deskripsi', 'Deskripsi pertandingan tidak boleh melebihi 511 perkataan');
 
         if (hadPeserta && hadPeserta < 1 && hadPeserta > 999) throw new Ralat('hadPeserta', 'Had Peserta mesti antara 1 - 999');
 
@@ -96,7 +104,7 @@ router.put('/:pertandingan/kemas_kini', async (req, res) => {
         });
         console.log(deskripsi)
         pertandingan.nama = nama || pertandingan.nama;
-        pertandingan.tentang.deskripsi = (deskripsi === "") ? "" : pertandingan.tentang.deskripsi;
+        pertandingan.tentang.deskripsi = (deskripsi === "") ? deskripsi : (deskripsi) ? deskripsi : pertandingan.tentang.deskripsi;
         pertandingan.tentang.tarikhPelaksanaan = (tarikhPelaksanaan && new Date(tarikhPelaksanaan)) || pertandingan.tentang.tarikhPelaksanaan;
         pertandingan.tentang.syarat = syarat || pertandingan.tentang.syarat;
         pertandingan.tentang.sumber = sumber || pertandingan.tentang.sumber;
@@ -132,6 +140,8 @@ router.delete('/:pertandingan/hapus', async (req, res) => {
         const { deletedCount: hapus } = await Pertandingan.deleteOne({ _id });
     
         if (!hapus) throw new Ralat('Hapus', 'Pertandingan gagal dihapuskan');
+
+        await Markah.deleteMany({ pertandingan: _id})
     
         res.status(200).send({ mesej: 'Pertandingan berjaya dihapuskan'});
     } catch (ralat) {
@@ -143,7 +153,15 @@ router.get('/:pertandingan/peserta', async (req, res) => {
     try {
         const { pertandingan } = req.params;
 
-        const peserta = await Markah.find({ pertandingan }).populate('peserta', 'namaAkaun namaPenuh');
+        const peserta = await Markah.find({ pertandingan }).populate('peserta', 'namaAkaun namaPenuh emel');
+
+        peserta.sort((a, b) => {
+            let x = a.peserta.namaPenuh.toLowerCase();
+            let y = b.peserta.namaPenuh.toLowerCase();
+            if (x < y) {return -1;}
+            if (x > y) {return 1;}
+            return 0;
+        });
 
         res.status(200).send(peserta);
     } catch (ralat) {

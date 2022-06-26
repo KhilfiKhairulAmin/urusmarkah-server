@@ -31,6 +31,41 @@ router.put('/laksana/:pertandingan', async (req, res) => {
     }
 });
 
+router.delete('/tamat/:pertandingan', async (req, res) => {
+    try {
+        const { pertandingan: _id } = req.params;
+    
+        const pertandingan = await Pertandingan.findById(_id, 'format status');
+
+        if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak dijumpai');
+        
+        pertandingan.status = 2;
+        
+        pertandingan.save();
+
+        res.status(200).send({ mesej: 'Pertandingan berjaya ditamatkan'});
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Sila periksa butiran anda')
+    }
+});
+
+router.get('/keputusan/:pertandingan', async (req, res) => {
+    try {
+        const { pertandingan: _id } = req.params;
+
+        const markah = await Markah.find({ pertandingan: _id }).populate('peserta');
+
+        markah.sort((a, b) => {
+            return b.jumlah - a.jumlah
+        });
+
+        res.status(200).send(markah)
+
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Ralat berlaku')
+    }
+})
+
 router.put('/:pertandingan', async (req, res) => {
     try {
         const { pertandingan: _id } = req.params;
@@ -41,15 +76,16 @@ router.put('/:pertandingan', async (req, res) => {
 
         if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak wujud');
 
-        console.log(markah.length + " " + nilai.length)
+        console.log(markah + " " + nilai)
 
         if (markah.length !== nilai.length) throw new Ralat('urusmarkah.markah & urusmarkah.nilai', 'Bilangan item Array dalam markah dan nilai mesti sama');
 
-        for (const n of nilai) {
-            if ((typeof n) !== String || (typeof n) !== Number) throw new Ralat('nilai', 'Hanya jenis data String dan Number dibenarkah');
+        // for (const n of nilai) {
+        //      console.log(n)
+        //     if ((typeof n) !== String && (typeof n) !== Number) throw new Ralat('nilai', 'Hanya jenis data String dan Number dibenarkah');
 
-            if (typeof parseInt(n) === NaN) throw new Ralat('nilai', 'Nilai String mestilah menggunakan nombor');
-        }
+        //     if (typeof parseInt(n) === NaN) throw new Ralat('nilai', 'Nilai String mestilah menggunakan nombor');
+        // }
 
         const markahPeserta = [];
 
@@ -62,32 +98,33 @@ router.put('/:pertandingan', async (req, res) => {
             
             if (!urus) throw new Ralat('urusmarkah.markah', `Markah ${_id} tidak wujud. Pengemaskinian markah gagal`);
 
-            markahPeserta.push(urus);
-
             // Penambahan
             let tambah;
-            if ((typeof nilai[i]) === String) {
-                // Setter
-                tambah = parseInt(nilai[i]);
-                markahPeserta[i].markah.push(tambah - markahPeserta[i].jumlah);
-                markahPeserta[i].jumlah = tambah;
-            }
-            else {
+            // if ((typeof nilai[i]) === String) {
+            //     // Setter
+            //     tambah = parseInt(nilai[i]);
+            //     markahPeserta[i].markah.push(tambah - markahPeserta[i].jumlah);
+            //     markahPeserta[i].jumlah = tambah;
+            // }
+            // else {
                 // Operator
-                tambah = nilai[i];
-                markahPeserta[i].jumlah += tambah;
-                markahPeserta[i].markah.push(tambah);
-            }
+            tambah = parseFloat(nilai[i]);
+            urus.jumlah = urus.jumlah + tambah;
+            urus.markah.push(tambah);
+
+            await urus.save()
+            // }
         }
 
-        // Menyimpan data markah yang dikemaskini
-        for (const markah of markahPeserta) {
-            await markah.save();
-        }
+        const markahTerkini = await Markah.find({ pengelola, pertandingan: _id }).populate('peserta');
 
-        const hantar = await Markah.find({ pertandingan: _id }).sort([ 'jumlah' ]).populate('peserta');
+        console.log(markahTerkini)
 
-        res.send(200).send(hantar);
+        markahTerkini.sort((a, b) => {
+            return b.jumlah - a.jumlah
+        });
+
+        res.status(200).send(markahTerkini);
 
     } catch (ralat) {
         kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran markah tepat');
