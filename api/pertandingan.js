@@ -1,6 +1,7 @@
 const express = require('express');
 const Markah = require('../model/Markah');
 const Pertandingan = require('../model/Pertandingan');
+const Peserta = require('../model/Peserta');
 const penjanaTarikhMasa = require('../util/janaTarikhMasa');
 const router = express.Router();
 const kendaliRalatMongoose = require('../util/kendaliRalatMongoose');
@@ -30,7 +31,33 @@ router.post('/cipta', async (req, res) => {
     } catch (ralat) {
         kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran pertandingan mengikut format');
     }
-}); 
+});
+
+router.post('/:pertandingan/cipta', async (req, res) => {
+    try {
+        const nama = req.body;
+        const { pertandingan } = req.params;
+    
+        for (const n of nama) {
+            const peserta = new Peserta({
+                emel: `${n}@${new Date().toLocaleString()}`,
+                namaPenuh: n
+            });
+            const markah = new Markah({
+                peserta: peserta._id,
+                pertandingan,
+                markah: [],
+                jumlah: 0
+            })
+            await peserta.save({ validateBeforeSave: false})
+            await markah.save({ validateBeforeSave: false})
+        }
+    
+        return res.status(200).send({ mesej: 'Peserta-peserta berjaya didaftarkan'});
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Ralat berlaku')
+    }
+})
 
 router.get('/', async (req, res) => {
     try {
