@@ -142,7 +142,6 @@ router.put('/kemas_kini', async (req, res) => {
         }
 
         // Mengemaskini nama pengelola
-        console.log(req.body)
         pengelola.namaPenuh = namaPenuh || pengelola.namaPenuh;
         pengelola.namaAkaun = namaAkaun || pengelola.namaAkaun;
 

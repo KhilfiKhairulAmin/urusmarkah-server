@@ -129,7 +129,7 @@ router.put('/:pertandingan/kemas_kini', async (req, res) => {
         sumber.forEach((s) => {
             if (!s.nama || !s.url) throw new Ralat('sumber.nama | sumber.url', 'Sumber tidak boleh kosong');
         });
-        console.log(deskripsi)
+
         pertandingan.nama = nama || pertandingan.nama;
         pertandingan.tentang.deskripsi = (deskripsi === "") ? deskripsi : (deskripsi) ? deskripsi : pertandingan.tentang.deskripsi;
         pertandingan.tentang.tarikhPelaksanaan = (tarikhPelaksanaan && new Date(tarikhPelaksanaan)) || pertandingan.tentang.tarikhPelaksanaan;
@@ -149,8 +149,6 @@ router.delete('/:pertandingan/hapus', async (req, res) => {
         const { pertandingan: _id } = req.params;
         const { pengelola } = req.muatanToken;
         const { nama } = req.body;
-
-        console.log(req.body)
     
         // Memastikan pengesahan diberi
         // Pengesahan ialah nama pertandingan yang hendak dihapuskan

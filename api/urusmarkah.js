@@ -82,13 +82,6 @@ router.put('/:pertandingan', async (req, res) => {
 
         if (markah.length !== nilai.length) throw new Ralat('urusmarkah.markah & urusmarkah.nilai', 'Bilangan item Array dalam markah dan nilai mesti sama');
 
-        // for (const n of nilai) {
-        //      console.log(n)
-        //     if ((typeof n) !== String && (typeof n) !== Number) throw new Ralat('nilai', 'Hanya jenis data String dan Number dibenarkah');
-
-        //     if (typeof parseInt(n) === NaN) throw new Ralat('nilai', 'Nilai String mestilah menggunakan nombor');
-        // }
-
         const markahPeserta = [];
 
         // Mencari setiap data markah
@@ -102,25 +95,14 @@ router.put('/:pertandingan', async (req, res) => {
 
             // Penambahan
             let tambah;
-            // if ((typeof nilai[i]) === String) {
-            //     // Setter
-            //     tambah = parseInt(nilai[i]);
-            //     markahPeserta[i].markah.push(tambah - markahPeserta[i].jumlah);
-            //     markahPeserta[i].jumlah = tambah;
-            // }
-            // else {
-                // Operator
             tambah = parseFloat(nilai[i]);
             urus.jumlah = urus.jumlah + tambah;
             urus.markah.push(tambah);
 
             await urus.save()
-            // }
         }
 
         const markahTerkini = await Markah.find({ pengelola, pertandingan: _id }).populate('peserta');
-
-        console.log(markahTerkini)
 
         markahTerkini.sort((a, b) => {
             return b.jumlah - a.jumlah

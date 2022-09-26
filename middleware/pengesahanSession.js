@@ -17,8 +17,6 @@ const pengesahanSession = async (req, res, next) => {
 
         if (!session) throw new Ralat('Ralat Kesahan', 'Session tidak sah');
 
-        console.log(session)
-
         req.peserta = session.peserta;
 
         next();

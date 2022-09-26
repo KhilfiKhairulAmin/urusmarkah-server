@@ -151,8 +151,6 @@ router.get('/pertandingan', async (req, res) => {
 
         const pertandingan = await Markah.find({ peserta: peserta._id }, 'pertandingan').populate('pertandingan', 'pengelola nama tentang status');
 
-        console.log(pertandingan)
-
         res.status(200).send(pertandingan);
     } catch (ralat) {
         kendaliRalatMongoose(res, ralat, 'Tiada pertandingan dimasuki');
@@ -162,8 +160,6 @@ router.get('/pertandingan', async (req, res) => {
 router.get('/pertandingan_terkini', async (req, res) => {
     try {
         const pertandingan = await Pertandingan.find({ status: 0 }, 'pengelola nama status bilPeserta').sort('bilPeserta').populate('pengelola', 'namaAkaun');
-
-        console.log(pertandingan)
 
         res.status(200).send(pertandingan);
     } catch (ralat) {
