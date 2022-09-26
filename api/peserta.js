@@ -20,6 +20,8 @@ router.post('/daftar', async (req, res) => {
 
         if (emelDigunakan) throw new Ralat('Emel', 'Emel sudah berdaftar');
 
+        if (!noKP) throw new Ralat('noKP', 'Nombor Kad Pengenalan tidak boleh kosong');
+
         if (noKP.length !== 12) throw new Ralat('noKP', 'Nombor Kad Pengenalan mesti mengandungi tepat 12 digit nombor');
 
         if (namaPenuh.length > 120) throw new Ralat('namaPenuh', 'Nama penuh tidak boleh melebihi 120 huruf');
@@ -49,7 +51,6 @@ router.post('/daftar', async (req, res) => {
         res.status(200).send({ session: session._id });
 
     } catch (ralat) {
-        console.log(ralat);
         kendaliRalatMongoose(res, ralat, 'Sila pastikan butiran anda mengikut format yang betul');
     }
 });
