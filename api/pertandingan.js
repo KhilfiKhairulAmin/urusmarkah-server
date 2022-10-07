@@ -40,7 +40,8 @@ router.post('/:pertandingan/cipta', async (req, res) => {
     
         for (const n of nama) {
             const peserta = new Peserta({
-                emel: `${n}@${new Date().toLocaleString()}`,
+                namaAkaun: `${n.toLowerCase()+new Date().getMilliseconds()}`,
+                emel: `${new Date().getTime()}@urusmarkah`,
                 namaPenuh: n
             });
             const markah = new Markah({
@@ -62,12 +63,13 @@ router.post('/:pertandingan/cipta', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const { pengelola } = req.muatanToken;
-        const { nama } = req.query;
+        const { nama, status } = req.query;
 
         const query = { pengelola };
 
         if (nama) query.nama = { '$regex': nama, '$options':'i' };
-
+        if (status) query.status = parseInt(status);
+        console.log(query);
         const semuaPertandingan = await Pertandingan.find(query, 'nama tarikhMasa status bilPeserta');
 
         semuaPertandingan.sort((a, b) => {
