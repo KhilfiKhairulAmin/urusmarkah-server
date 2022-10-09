@@ -36,7 +36,11 @@ router.post('/cipta', async (req, res) => {
 router.post('/:pertandingan/cipta', async (req, res) => {
     try {
         const nama = req.body;
-        const { pertandingan } = req.params;
+        const { pertandingan: pertandingan_id } = req.params;
+
+        const pertandingan = await Pertandingan.findById(pertandingan_id, 'bilPeserta');
+
+        if (!pertandingan) throw new Ralat('Pertandingan tidak wujud', 'Pertandingan tidak wujud');
     
         for (const n of nama) {
             const peserta = new Peserta({
@@ -46,13 +50,18 @@ router.post('/:pertandingan/cipta', async (req, res) => {
             });
             const markah = new Markah({
                 peserta: peserta._id,
-                pertandingan,
+                pertandingan: pertandingan_id,
                 markah: [],
                 jumlah: 0
-            })
+            });
+
+            pertandingan.bilPeserta += 1;
+
             await peserta.save({ validateBeforeSave: false})
             await markah.save({ validateBeforeSave: false})
         }
+
+        await pertandingan.save();
     
         return res.status(200).send({ mesej: 'Peserta-peserta berjaya didaftarkan'});
     } catch (ralat) {
@@ -205,6 +214,33 @@ router.get('/:pertandingan/peserta/:peserta', async (req, res) => {
         if (!peserta) throw new Ralat('Pencarian', 'Peserta tidak dijumpai')
 
         res.status(200).send(peserta);
+    } catch (ralat) {
+        kendaliRalatMongoose(res, ralat, 'Peserta tidak dijumpai')
+    }
+});
+
+router.delete('/:pertandingan/peserta/:peserta/hapus', async (req, res) => {
+    try {
+        const { pertandingan, peserta: _id } = req.params;
+
+        const peserta = await Markah.findOne({ pertandingan, peserta: _id }).populate('peserta', 'noKP bilPeserta').populate('pertandingan', 'bilPeserta');
+
+        if (!peserta) throw new Ralat('Pencarian', 'Peserta tidak dijumpai')
+
+        await Markah.deleteOne({ pertandingan, peserta: _id });
+        
+        // Menguji jika pengguna adalah dijana oleh sistem dan tidak berdaftar
+        const noKPwujud = peserta.peserta.noKP;
+        
+        // Hapus data peserta yang dijana oleh sistem
+        if (!noKPwujud) await Peserta.deleteOne({ _id });
+
+        peserta.pertandingan.bilPeserta -= 1;
+
+        await peserta.pertandingan.save()
+
+        res.status(200).send({ mesej: 'Pertandingan berjaya dihapuskan'});
+
     } catch (ralat) {
         kendaliRalatMongoose(res, ralat, 'Peserta tidak dijumpai')
     }

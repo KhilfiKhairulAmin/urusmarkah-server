@@ -148,8 +148,22 @@ router.put('/log_keluar', async (req, res) => {
 router.get('/pertandingan', async (req, res) => {
     try {
         const { peserta } = req;
+        const { nama, status } = req.query;
 
-        const pertandingan = await Markah.find({ peserta: peserta._id }, 'pertandingan').populate('pertandingan', 'pengelola nama tentang status');
+        let query = { }
+        
+        if (nama) query.nama = { '$regex': nama, '$options':'i' };
+        if (status) query.status = parseInt(status);
+
+        const pertandingan = await Markah.find({ peserta: peserta._id }, 'pertandingan').populate('pertandingan', 'pengelola nama status', query);
+        
+        // pertandingan.sort((a, b) => {
+        //     let x = a.pertandingan.nama.toLowerCase();
+        //     let y = b.pertandingan.nama.toLowerCase();
+        //     if (x < y) {return -1;}
+        //     if (x > y) {return 1;}
+        //     return 0;
+        // });
 
         res.status(200).send(pertandingan);
     } catch (ralat) {
@@ -159,7 +173,13 @@ router.get('/pertandingan', async (req, res) => {
 
 router.get('/pertandingan_terkini', async (req, res) => {
     try {
-        const pertandingan = await Pertandingan.find({ status: 0 }, 'pengelola nama status bilPeserta').sort('bilPeserta').populate('pengelola', 'namaAkaun');
+        const { nama } = req.query;
+
+        let query = { status: '0' }
+
+        if (nama) query.nama = { '$regex': nama, '$options':'i' };
+
+        const pertandingan = await Pertandingan.find(query, 'tentang.tarikhPelaksanaan pengelola nama status bilPeserta').sort('bilPeserta').populate('pengelola', 'namaAkaun');
 
         res.status(200).send(pertandingan);
     } catch (ralat) {

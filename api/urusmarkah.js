@@ -9,7 +9,7 @@ router.put('/laksana/:pertandingan', async (req, res) => {
     try {
         const { pertandingan: _id } = req.params;
     
-        const pertandingan = await Pertandingan.findById(_id, 'format status');
+        const pertandingan = await Pertandingan.findById(_id, 'format status tentang.tarikhPelaksanaan');
 
         if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak dijumpai');
         
@@ -22,7 +22,9 @@ router.put('/laksana/:pertandingan', async (req, res) => {
     
             await p.save();
         }
-        pertandingan.tarikhMasa.laksana = new Date();
+        let tarikh_baru = new Date();
+        pertandingan.tarikhMasa.laksana = tarikh_baru;
+        pertandingan.tentang.tarikhPelaksanaan = tarikh_baru;
         
         pertandingan.save();
 
