@@ -70,7 +70,7 @@ router.post('/daftar', async (req, res) => {
         const muatan = { validasi: validasi._id, pengelola: pengelola._id }
 
         // Membuat token baharu
-        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
+        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: process.env.MASA });
 
         // Membuat refresh token baharu
         const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });

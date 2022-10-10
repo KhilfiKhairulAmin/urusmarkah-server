@@ -10,10 +10,10 @@ exports.connect = () => {
     mongoose
         .connect(MONGO_URI)
         .then(() => {
-            console.log('Berjaya menghubungkan pangkalan data');
+            // console.log('Berjaya menghubungkan pangkalan data');
         })
         .catch((ralat) => {
-            console.log('Hubungan pangkalan data gagal. Proses dihentikan sekarang...');
+            // console.log('Hubungan pangkalan data gagal. Proses dihentikan sekarang...');
             console.error(ralat);
             process.exit(1);
         });

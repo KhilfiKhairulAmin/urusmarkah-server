@@ -40,7 +40,7 @@ router.post('/log_masuk', async (req, res) => {
         const muatan = { validasi: validasi._id, pengelola: pengelola._id }
 
         // Membuat token baharu
-        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
+        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: process.env.MASA });
 
         // Membuat refresh token baharu
         const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY'});
@@ -106,7 +106,7 @@ router.get('/refresh_token', async (req, res) => {
         }
 
         // Menajana token dan refresh token baharu
-        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: '30m' });
+        const token = janaTokenJWT(muatan, { secretEnvKey: 'TOKEN_KEY', expiresIn: process.env.MASA });
         const refreshToken = janaTokenJWT(muatan, { secretEnvKey: 'REFRESH_TOKEN_KEY' });
 
         // Memasukkan refresh token terkini ke dalam pengguna

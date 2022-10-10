@@ -80,8 +80,6 @@ router.put('/:pertandingan', async (req, res) => {
 
         if (!pertandingan) throw new Ralat('Pencarian', 'Pertandingan tidak wujud');
 
-        console.log(markah + " " + nilai)
-
         if (markah.length !== nilai.length) throw new Ralat('urusmarkah.markah & urusmarkah.nilai', 'Bilangan item Array dalam markah dan nilai mesti sama');
 
         const markahPeserta = [];

@@ -18,7 +18,6 @@ const dapatkanPertandingan = async (req, res, next) => {
 
         next();
     } catch (err) {
-        console.log(err);
         return res.status(500).send({ mesej: 'Masalah dalaman server' });
     }
 };

@@ -78,7 +78,7 @@ router.get('/', async (req, res) => {
 
         if (nama) query.nama = { '$regex': nama, '$options':'i' };
         if (status) query.status = parseInt(status);
-        console.log(query);
+
         const semuaPertandingan = await Pertandingan.find(query, 'nama tarikhMasa status bilPeserta');
 
         semuaPertandingan.sort((a, b) => {
