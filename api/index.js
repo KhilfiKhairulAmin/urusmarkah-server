@@ -8,4 +8,8 @@ const routeLog = (req, res, next) => {
 
 router.use(routeLog);
 
+router.get('/', async (req, res) => {
+    return res.status(200).send("<h1>Welcome to Urusmarkah</h1>");
+})
+
 module.exports = router;
