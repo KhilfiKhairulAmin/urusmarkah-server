@@ -176,8 +176,22 @@ router.delete('/:pertandingan/hapus', async (req, res) => {
         const { deletedCount: hapus } = await Pertandingan.deleteOne({ _id });
     
         if (!hapus) throw new Ralat('Hapus', 'Pertandingan gagal dihapuskan');
+        
+        const markah = await Markah.find({ pertandingan: _id }).populate('peserta', 'noKP')
 
-        await Markah.deleteMany({ pertandingan: _id})
+        let id = []
+
+        markah.forEach((m) => {
+            const noKPWujud = m.peserta.noKP;
+
+            if (!noKPWujud) {
+                id.push(m.peserta._id)
+            }
+        });
+        
+        await Peserta.deleteMany({ _id: id });
+        await Markah.deleteMany({ pertandingan: _id});
+
     
         res.status(200).send({ mesej: 'Pertandingan berjaya dihapuskan'});
     } catch (ralat) {
@@ -223,7 +237,7 @@ router.delete('/:pertandingan/peserta/:peserta/hapus', async (req, res) => {
     try {
         const { pertandingan, peserta: _id } = req.params;
 
-        const peserta = await Markah.findOne({ pertandingan, peserta: _id }).populate('peserta', 'noKP bilPeserta').populate('pertandingan', 'bilPeserta');
+        const peserta = await Markah.findOne({ pertandingan, peserta: _id }).populate('peserta', 'noKP').populate('pertandingan', 'bilPeserta');
 
         if (!peserta) throw new Ralat('Pencarian', 'Peserta tidak dijumpai')
 
