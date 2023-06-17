@@ -11,4 +11,4 @@ const skemaPengelola = new Schema({
     validasi: { type: Schema.Types.ObjectId, ref: 'validasi' }
 });
 
-module.exports = model('pengelola', skemaPengelola, 'pengelola');
+module.exports = model('pengelola', skemaPengelola, 'Pengelola');

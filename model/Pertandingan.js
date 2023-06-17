@@ -21,4 +21,4 @@ const skemaPertandingan = new Schema({
     }
 });
 
-module.exports = model('pertandingan', skemaPertandingan, 'pertandingan');
+module.exports = model('pertandingan', skemaPertandingan, 'Pertandingan');

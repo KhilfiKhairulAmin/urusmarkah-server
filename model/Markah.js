@@ -7,4 +7,4 @@ const skemaMarkah = new Schema({
     jumlah: { type: Number, default: 0 }
 });
 
-module.exports = model('markah', skemaMarkah, 'markah');
+module.exports = model('markah', skemaMarkah, 'Markah');

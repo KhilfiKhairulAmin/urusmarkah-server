@@ -5,4 +5,4 @@ const skemaValidasi = new Schema ({
     refreshToken: { type: [String], default: [] }
 });
 
-module.exports = model('validasi', skemaValidasi, 'validasi');
+module.exports = model('validasi', skemaValidasi, 'Validasi');

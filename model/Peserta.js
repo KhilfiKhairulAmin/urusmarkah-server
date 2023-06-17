@@ -9,4 +9,4 @@ const skemaPeserta = new Schema({
     tarikhMasaDaftar: Date
 });
 
-module.exports = model('peserta', skemaPeserta, 'peserta');
+module.exports = model('peserta', skemaPeserta, 'Peserta');
